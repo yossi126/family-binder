@@ -69,8 +69,18 @@ var ACTIONS = {
   'documents.update':    actDocUpdate_,
   'documents.delete':    actDocDelete_,
   'migration.import':    actMigrationImport_,
-  'migration.status':    actMigrationStatus_
+  'migration.status':    actMigrationStatus_,
+  'diagnose':            actDiagnose_
 };
+
+/** Read-only counts used to verify the migration. Writes nothing. */
+function actDiagnose_() {
+  return {
+    calendar: countCalendarEvents(),
+    rows: countBinderRows(),
+    folders: countApptFolders()
+  };
+}
 
 // ------------------------------------------------------------------ reading
 

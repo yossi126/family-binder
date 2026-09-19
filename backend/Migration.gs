@@ -86,6 +86,9 @@ function actMigrationImport_(req) {
         report.appointments.created++;
         if (findEvent_(a.gcal_event_id)) report.appointments.event_reused++;
         else report.appointments.event_created++;
+        // record the mapping anyway, so the document counts below report the
+        // links the real run would make rather than reporting everything as general
+        idMap[a.id] = 'dry-run';
         continue;
       }
 

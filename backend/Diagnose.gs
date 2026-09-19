@@ -1,67 +1,55 @@
 /**
- * Diagnose.gs — run these from the editor when setup() cannot reach something.
- * They print only what is needed to identify the problem; nothing here writes.
+ * Diagnose.gs — read-only checks, run from the editor when something needs
+ * verifying against the live Google data. Nothing here writes.
  */
 
 /**
- * Prints the calendars this account can actually open, so the right
- * CALENDAR_ID can be copied without guessing. The configured id is checked
- * first and reported as reachable or not.
+ * Counts calendar events in a window around the imported appointments, so the
+ * migration can be proved not to have double-booked anything. Run it before
+ * and after the import and compare the two numbers.
  */
-function diagnoseCalendar() {
-  var lines = [];
-  var configured = prop_(PROP_CALENDAR_ID);
+function countCalendarEvents() {
+  var cal = calendar_();
+  var from = new Date(2024, 0, 1);
+  var to = new Date(2032, 0, 1);
+  var events = cal.getEvents(from, to);
 
-  lines.push('החשבון שמריץ: ' + Session.getEffectiveUser().getEmail());
-  lines.push('CALENDAR_ID שהוגדר: ' + (configured ? maskId_(configured) : '(ריק)'));
-
-  if (configured) {
-    var found = null;
-    try { found = CalendarApp.getCalendarById(configured); } catch (e) {
-      lines.push('  שגיאה בפתיחה: ' + e.message);
-    }
-    lines.push('  נגיש? ' + (found ? 'כן — ' + found.getName() : 'לא'));
+  // group by day so a duplicate pair is visible without printing any titles
+  var byDay = {};
+  for (var i = 0; i < events.length; i++) {
+    var key = Utilities.formatDate(events[i].getStartTime(), TZ, 'yyyy-MM-dd');
+    byDay[key] = (byDay[key] || 0) + 1;
   }
+  var multi = Object.keys(byDay).filter(function (k) { return byDay[k] > 1; });
 
-  lines.push('');
-  lines.push('היומנים שהחשבון הזה רואה:');
-  var cals = CalendarApp.getAllCalendars();
-  for (var i = 0; i < cals.length; i++) {
-    var c = cals[i];
-    lines.push('  [' + (i + 1) + '] ' + c.getName() +
-               (c.isOwnedByMe() ? ' (בבעלותי)' : '') +
-               '\n      id: ' + c.getId());
-  }
-  lines.push('');
-  lines.push('העתק את ה-id הנכון אל ה-Script Property בשם CALENDAR_ID.');
-
-  var out = lines.join('\n');
+  var out = [
+    'חלון: 2024-01-01 עד 2032-01-01',
+    'סה"כ אירועים ביומן: ' + events.length,
+    'ימים עם יותר מאירוע אחד: ' + multi.length + (multi.length ? ' → ' + multi.join(', ') : '')
+  ].join('\n');
   console.log(out);
   return out;
 }
 
-/** Checks the Drive root folder without printing its id. */
-function diagnoseDrive() {
-  var configured = prop_(PROP_ROOT_FOLDER);
-  var lines = ['ROOT_FOLDER_ID שהוגדר: ' + (configured ? maskId_(configured) : '(ריק)')];
-  try {
-    var f = DriveApp.getFolderById(configured);
-    lines.push('נגיש? כן — ' + f.getName());
-    lines.push('תיקיות משנה קיימות:');
-    var it = f.getFolders();
-    var n = 0;
-    while (it.hasNext() && n < 25) { lines.push('  · ' + it.next().getName()); n++; }
-    if (!n) lines.push('  (אין)');
-  } catch (e) {
-    lines.push('נגיש? לא — ' + e.message);
-  }
-  var out = lines.join('\n');
+/** Counts the rows the binder currently holds. */
+function countBinderRows() {
+  var docs = readAll_(TAB_DOCS);
+  var out = [
+    'תורים: ' + readAll_(TAB_APPTS).length,
+    'מסמכים: ' + docs.length +
+      ' (חסרי קובץ: ' + docs.filter(function (d) { return d.status === 'missing'; }).length + ')',
+    'הערות: ' + readAll_(TAB_NOTES).length
+  ].join('\n');
   console.log(out);
   return out;
 }
 
-/** Shows an id as first/last 4 characters, so logs can be shared safely. */
-function maskId_(id) {
-  var s = String(id);
-  return s.length <= 12 ? s.slice(0, 2) + '…' : s.slice(0, 4) + '…' + s.slice(-4) + ' (' + s.length + ' תווים)';
+/** Lists the appointment folders, to confirm one folder per imported row. */
+function countApptFolders() {
+  var it = apptsFolder_().getFolders();
+  var n = 0;
+  while (it.hasNext()) { it.next(); n++; }
+  var out = 'תיקיות תחת ' + FOLDER_APPTS + '/: ' + n;
+  console.log(out);
+  return out;
 }
