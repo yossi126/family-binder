@@ -278,9 +278,20 @@
       '<div class="doc-sub">' + sub.join(' · ') + '</div></div>' +
       '<div class="doc-actions">' +
       '<button type="button" class="iconbtn" data-act="open" title="פתח את המסמך" aria-label="פתח את המסמך">' + I.open + '</button>' +
-      '<button type="button" class="iconbtn" data-act="share" title="שתף את הקובץ" aria-label="שתף את הקובץ">' + I.share + '</button>' +
+      shareBtnHtml(d.id) +
       '<button type="button" class="iconbtn danger" data-act="delete-doc" title="מחק" aria-label="מחק מסמך">' + I.trashSmall + '</button>' +
       '</div></li>';
+  }
+
+  /**
+   * The share button renders from the cache, so a re-render never disarms a
+   * file that was already fetched (which would cost a pointless second trip).
+   */
+  function shareBtnHtml(id) {
+    var ready = !!docCache[id];
+    var label = ready ? 'שתף עכשיו' : 'שתף את הקובץ';
+    return '<button type="button" class="iconbtn' + (ready ? ' is-ready' : '') +
+      '" data-act="share" title="' + label + '" aria-label="' + label + '">' + I.share + '</button>';
   }
 
   function renderDetail() {
@@ -837,9 +848,24 @@
    */
   var blobUrls = {};
 
+  /**
+   * Fetched file bytes, keyed by document id. Sharing needs the bytes in hand
+   * *before* the tap that opens the share sheet (see shareDoc), so whatever a
+   * view or an earlier share already downloaded is kept here and reused.
+   */
+  var docCache = {};
+
+  function fetchDoc(id) {
+    if (docCache[id]) return Promise.resolve(docCache[id]);
+    return api.fetchDocument(id).then(function (got) {
+      if (got) docCache[id] = got;
+      return got;
+    });
+  }
+
   function docBlobUrl(id) {
     if (blobUrls[id]) return Promise.resolve(blobUrls[id]);
-    return api.fetchDocument(id).then(function (got) {
+    return fetchDoc(id).then(function (got) {
       if (!got) return null;
       blobUrls[id] = URL.createObjectURL(got.blob);
       return blobUrls[id];
@@ -868,6 +894,7 @@
 
     var tab = window.open('', '_blank');
     docBlobUrl(id).then(function (url) {
+      armShare(id);
       if (!url) {
         if (tab) tab.close();
         openDriveLink(d);
@@ -887,25 +914,72 @@
    * than a Drive link they may have no access to. Falls back to sharing the
    * link when the platform cannot share files or the file is too large.
    */
+  /**
+   * Sharing the file itself happens in two taps, and that is deliberate.
+   *
+   * iOS only honours navigator.share inside the tap that triggered it. Waiting
+   * for the download first spends that user activation, so Safari rejects the
+   * call and — because the rejection also lands outside an activation — the
+   * link fallback dies just as silently. The button looks dead.
+   *
+   * So the first tap only downloads and re-labels the button; the second tap
+   * shares synchronously from the cache. A document already opened (or shared)
+   * this session is cached, and then the first tap shares straight away.
+   */
   function shareDoc(id) {
     var d = findDoc(id);
     if (!d) return;
     if (!d.file_id) { toast('המסמך עדיין לא הועלה'); return; }
 
-    api.fetchDocument(id).then(function (got) {
-      if (got && canShareFile()) {
-        var file = new File([got.blob], got.fileName, { type: got.mime });
-        if (navigator.canShare && !navigator.canShare({ files: [file] })) return shareLink(d);
-        return navigator.share({ files: [file], title: got.fileName }).catch(function (err) {
-          // The user dismissing the share sheet is not a failure.
-          if (err && err.name !== 'AbortError') shareLink(d);
-        });
-      }
-      return shareLink(d);
+    if (docCache[id]) return shareCached(id, d);
+    if (!canShareFile()) return shareLink(d);
+
+    var btn = shareBtnFor(id);
+    setShareBtnState(btn, 'loading');
+    fetchDoc(id).then(function (got) {
+      if (!got) { setShareBtnState(btn, 'idle'); return shareLink(d); }
+      setShareBtnState(btn, 'ready');
+      toast('הקובץ מוכן — לחץ שוב כדי לשתף');
     }).catch(function (err) {
+      setShareBtnState(btn, 'idle');
       if (err && err.code === 'unauthorized') { lock(); return; }
       shareLink(d);
     });
+  }
+
+  /** Shares from the cache, synchronously inside the tap. */
+  function shareCached(id, d) {
+    var got = docCache[id];
+    var file = new File([got.blob], got.fileName, { type: got.mime });
+    if (!canShareFile() || (navigator.canShare && !navigator.canShare({ files: [file] }))) {
+      return shareLink(d);
+    }
+    navigator.share({ files: [file], title: got.fileName }).catch(function (err) {
+      // Dismissing the share sheet is not a failure.
+      if (err && err.name !== 'AbortError') shareLink(d);
+    });
+  }
+
+  function shareBtnFor(id) {
+    return document.querySelector('[data-doc="' + cssEscape(id) + '"] [data-act="share"]');
+  }
+
+  /** Marks a share button as ready, so the next tap shares instead of fetching. */
+  function armShare(id) {
+    if (docCache[id]) setShareBtnState(shareBtnFor(id), 'ready');
+  }
+
+  function setShareBtnState(btn, state) {
+    if (!btn) return;
+    btn.classList.toggle('is-ready', state === 'ready');
+    btn.disabled = state === 'loading';
+    btn.setAttribute('aria-label',
+      state === 'ready' ? 'שתף עכשיו' : state === 'loading' ? 'מכין את הקובץ…' : 'שתף את הקובץ');
+    btn.setAttribute('title', btn.getAttribute('aria-label'));
+  }
+
+  function cssEscape(v) {
+    return String(v).replace(/["\\]/g, function (m) { return '\\' + m; });
   }
 
   function canShareFile() {

@@ -176,6 +176,11 @@ input,textarea{caret-color:var(--accent)}
   transition:background .15s}
 .iconbtn:hover{background:var(--paper-2)}
 .iconbtn.danger{color:var(--danger)}
+/* Share is a two-tap action on iOS: the first tap fetches the file, the second
+   opens the share sheet. `is-ready` marks the armed state between the two. */
+.iconbtn.is-ready{background:var(--accent);color:var(--on-accent)}
+.iconbtn.is-ready:hover{background:var(--accent)}
+.iconbtn:disabled{opacity:.45}
 .iconbtn.danger:hover{background:var(--danger-soft)}
 .detail-body{padding:16px;padding-bottom:calc(32px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px;max-width:760px;margin-inline:auto}
 
