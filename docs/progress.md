@@ -119,3 +119,29 @@ PIN שגוי → "קוד כניסה שגוי" ולא נשמר כלום · PIN נ
 האימות כאן הוא ספירות בלבד.
 
 **הבא:** Phase 4 — פריסה ל-GitHub Pages (S4).
+
+## 2026-09-19 — Phase 4: פריסה ל-GitHub Pages
+**כתובת האתר:** https://yossi126.github.io/family-binder/
+
+### שינוי מהתוכנית
+התוכנית הניחה פריסה מ-branch עם תיקיית `/site`. **GitHub מאפשר רק `/` או `/docs`** —
+`/site` לא מופיע בתפריט. במקום להזיז את האתר לשורש, נוספה workflow
+(`.github/workflows/pages.yml`) שמעלה את `site/` ישירות. מבנה ה-repo נשאר כמתוכנן.
+
+הריצה הראשונה נכשלה (`HttpError: Not Found` מ-`configure-pages`) כי Pages עוד לא הופעל
+ב-repo. נוסף `enablement: true` כדי שה-workflow יפעיל את Pages בעצמו ולא ייכשל שוב על זה.
+
+### מה אומת חי מול הכתובת האמיתית (לא localhost)
+- כל הקבצים מוגשים ב-200 עם content-type נכון: `index.html`, `styles.css`, `app.js`,
+  `api.js`, `config.js`, `manifest.webmanifest`, `apple-touch-icon.png`.
+- **CORS עובד מה-origin האמיתי** — זה היה הסיכון המרכזי בתוכנית. `fetch` מ-
+  `https://yossi126.github.io` אל `/exec` עבר, עקב אחרי ה-302, וקיבל
+  `{"ok":false,"error":"unauthorized"}` תוך ~1.5 שניות (נבדק עם PIN שגוי בכוונה).
+  אין preflight, אין חסימה.
+- מסך ה-PIN נטען, `dir=rtl`, `lang=he`, manifest ו-apple-touch-icon מקושרים,
+  2 מטא-תגי theme-color (בהיר/כהה). **0 שגיאות ו-0 אזהרות בקונסול.**
+
+כניסה עם ה-PIN האמיתי מול הכתובת החיה **לא בוצעה על ידי** — כדי לא להעביר את ה-PIN
+דרך הצ'אט. היא חלק מבדיקת האייפון (S5).
+
+**הבא:** S5 — בדיקה באייפון + שיתוף עם האחות.
