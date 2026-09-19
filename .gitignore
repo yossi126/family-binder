@@ -1,0 +1,13 @@
+# real data — never committed
+migration/*.json
+migration/*.db
+
+# secrets
+backend/.pin
+backend/.clasprc.json
+
+# tooling
+node_modules/
+.playwright-mcp/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,695 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>הקלסר הרפואי</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700&family=Frank+Ruhl+Libre:wght@700&display=swap">
+<style>
+:root{
+  --bg:#F1F4F6; --surface:#FFFFFF; --surface-2:#E7EDF0; --text:#17262B; --muted:#5B6D73;
+  --border:#D3DCE0; --border-strong:#B9C6CB;
+  --accent:#0E6F6B; --accent-soft:#D6ECEA; --accent-ink:#0A5552; --on-accent:#FFFFFF;
+  --warn:#B65E0C; --warn-soft:#FBEBD8; --danger:#B3261E; --danger-soft:#F9E0DE;
+  --shadow:0 1px 2px rgba(23,38,43,.05),0 6px 20px rgba(23,38,43,.07);
+  --r:14px; --r-sm:8px;
+  --font-ui:"Heebo",system-ui,"Segoe UI",Arial,sans-serif;
+  --font-display:"Frank Ruhl Libre","Times New Roman",serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1618; --surface:#172124; --surface-2:#1F2B2F; --text:#E4EBED; --muted:#98A9AF;
+    --border:#2A383D; --border-strong:#3A4B51;
+    --accent:#4DB8B1; --accent-soft:#163A39; --accent-ink:#8FDDD7; --on-accent:#08211F;
+    --warn:#F0A250; --warn-soft:#3A2A14; --danger:#F28B82; --danger-soft:#3D1E1B;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1618; --surface:#172124; --surface-2:#1F2B2F; --text:#E4EBED; --muted:#98A9AF;
+  --border:#2A383D; --border-strong:#3A4B51;
+  --accent:#4DB8B1; --accent-soft:#163A39; --accent-ink:#8FDDD7; --on-accent:#08211F;
+  --warn:#F0A250; --warn-soft:#3A2A14; --danger:#F28B82; --danger-soft:#3D1E1B;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35);
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-ui);font-size:15px;line-height:1.45;direction:rtl}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+h1,h2,h3{margin:0;text-wrap:balance}
+ul{list-style:none;margin:0;padding:0}
+svg{display:block}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.app{min-height:100%;display:flex;flex-direction:column}
+
+/* ---------- top bar ---------- */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:16px;padding:10px 16px;min-height:56px}
+.brand{display:flex;align-items:baseline;gap:10px}
+.brand h1{font-family:var(--font-display);font-size:22px;font-weight:700;letter-spacing:-.01em}
+.brand .tag{font-size:11px;font-weight:500;letter-spacing:.04em;color:var(--warn);background:var(--warn-soft);padding:2px 8px;border-radius:999px}
+.nav-desktop{display:none;gap:4px;margin-inline-start:12px}
+.nav-desktop button{background:none;border:0;padding:8px 14px;border-radius:999px;color:var(--muted);font-weight:500}
+.nav-desktop button[aria-current="page"]{background:var(--accent-soft);color:var(--accent-ink)}
+.topbar .spacer{flex:1}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border-strong);background:var(--surface);border-radius:999px;padding:8px 14px;font-weight:500}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.danger{color:var(--danger);border-color:var(--danger)}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--muted)}
+.btn.ghost:hover{background:var(--surface-2);color:var(--text)}
+.btn.small{padding:5px 10px;font-size:13px}
+.btn-new-desktop{display:none}
+
+/* ---------- main / layout ---------- */
+.main{flex:1;min-height:0;padding-block:16px 96px;padding-inline:16px}
+.view[hidden]{display:none}
+.layout{display:block}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r)}
+
+/* toolbar */
+.toolbar{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:14px;color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.search{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:6px 12px}
+.search input{border:0;background:none;flex:1;min-width:0;outline:none}
+.search svg{color:var(--muted)}
+
+/* agenda */
+.agenda .month{position:sticky;top:calc(56px + env(safe-area-inset-top,0px));z-index:5;background:var(--bg);display:flex;align-items:baseline;gap:10px;
+  font-family:var(--font-display);font-size:18px;font-weight:700;padding:14px 4px 8px;color:var(--text)}
+.agenda .month small{font-family:var(--font-ui);font-weight:400;font-size:13px;color:var(--muted)}
+.cards{display:flex;flex-direction:column;gap:8px}
+.card{display:grid;grid-template-columns:56px 1fr auto;gap:12px;align-items:center;text-align:start;width:100%;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;position:relative}
+.card:hover{border-color:var(--border-strong)}
+.card[aria-current="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.card.past{opacity:.72}
+.card.today::before{content:"";position:absolute;inset-block:10px;inset-inline-start:0;width:4px;border-radius:0 3px 3px 0;background:var(--today)}
+.date-block{display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--surface-2);border-radius:var(--r-sm);padding:6px 4px;min-height:56px}
+.date-block .day{font-size:24px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.date-block .wd{font-size:11px;color:var(--muted);margin-top:3px}
+.card-body{min-width:0}
+.card .row1{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.card .title{font-size:16px;font-weight:700;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card .meta{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);margin:2px 0 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card .meta svg{flex:0 0 auto}
+.card .chev{color:var(--muted)}
+.pill{display:inline-flex;align-items:center;border-radius:999px;padding:1px 8px;font-size:12px;font-weight:500}
+.pill.today{background:var(--accent-soft);color:var(--accent-ink)}
+.pill.soon{background:var(--surface-2);color:var(--text)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.count{display:inline-flex;align-items:center;gap:4px}
+.empty{text-align:center;color:var(--muted);padding:48px 16px}
+.empty strong{display:block;color:var(--text);font-size:17px;margin-bottom:4px}
+
+/* ---------- detail ---------- */
+.detail-panel{position:fixed;inset:0;z-index:30;background:var(--bg);transform:translateX(-100%);transition:transform .28s cubic-bezier(.2,.7,.2,1);overflow-y:auto;visibility:hidden}
+.detail-panel.open{transform:none;visibility:visible}
+.detail-head{position:sticky;top:0;z-index:2;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;
+  padding:10px 12px;padding-top:calc(10px + env(safe-area-inset-top,0px))}
+.detail-head .grow{flex:1;min-width:0}
+.detail-head .grow .sub{font-size:12px;color:var(--muted)}
+.iconbtn{border:0;background:none;border-radius:999px;padding:8px;color:var(--text);display:inline-flex}
+.iconbtn:hover{background:var(--surface-2)}
+.iconbtn.danger{color:var(--danger)}
+.detail-body{padding:16px;padding-bottom:calc(32px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:16px;max-width:760px;margin-inline:auto}
+.hero{display:grid;grid-template-columns:72px 1fr;gap:14px;align-items:start;padding:16px}
+.hero .date-block{min-height:72px}
+.hero .date-block .day{font-size:32px}
+.hero .date-block .mon{font-size:12px;color:var(--muted)}
+.hero h2{font-size:22px;font-weight:700;line-height:1.2}
+.hero .spec{color:var(--accent-ink);font-weight:500;margin-top:2px}
+.hero .when{margin-top:8px;font-variant-numeric:tabular-nums;color:var(--text)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;padding:0 16px 16px;font-size:14px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0}
+.section{padding:14px 16px}
+.section-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.section-head h3{font-size:15px;font-weight:700}
+.section-head h3 span{color:var(--muted);font-weight:400;margin-inline-start:6px}
+
+.doc{display:grid;grid-template-columns:40px 1fr auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--border)}
+.doc:first-child{border-top:0}
+.doc-icon{width:40px;height:40px;border-radius:var(--r-sm);display:grid;place-items:center;font-size:11px;font-weight:700;letter-spacing:.04em;background:var(--surface-2);color:var(--muted)}
+.doc-icon.pdf{background:var(--danger-soft);color:var(--danger)}
+.doc-icon.img{background:var(--accent-soft);color:var(--accent-ink)}
+.doc-icon.missing{background:var(--warn-soft);color:var(--warn)}
+.doc-main{min-width:0}
+.doc-name{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.doc-sub{font-size:12px;color:var(--muted);margin-top:1px}
+.doc-actions{display:flex;gap:2px}
+.progress{height:4px;background:var(--surface-2);border-radius:2px;overflow:hidden;margin-top:6px}
+.progress i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+
+.notes li{padding:10px 0;border-top:1px solid var(--border)}
+.notes li:first-child{border-top:0}
+.notes .at{font-size:12px;color:var(--muted);margin-top:2px}
+.note-form{display:flex;gap:8px;margin-top:10px}
+.note-form input{flex:1;min-width:0;border:1px solid var(--border);border-radius:999px;padding:8px 14px;background:var(--surface)}
+.uploading-hint{font-size:12px;color:var(--muted)}
+
+/* ---------- bottom nav / FAB (mobile) ---------- */
+.bottomnav{position:fixed;inset-inline:0;bottom:0;z-index:25;background:var(--surface);border-top:1px solid var(--border);
+  display:grid;grid-template-columns:1fr 1fr;padding-bottom:env(safe-area-inset-bottom,0px)}
+.bottomnav button{border:0;background:none;padding:10px 0 8px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;color:var(--muted)}
+.bottomnav button[aria-current="page"]{color:var(--accent-ink)}
+.bottomnav button[aria-current="page"] svg{color:var(--accent)}
+.fab{position:fixed;inset-inline-start:16px;bottom:calc(72px + env(safe-area-inset-bottom,0px));z-index:26;
+  width:56px;height:56px;border-radius:50%;border:0;background:var(--accent);color:var(--on-accent);box-shadow:var(--shadow);display:grid;place-items:center}
+
+/* ---------- docs view ---------- */
+.docs-wrap{max-width:900px;margin-inline:auto}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.page-head h2{font-family:var(--font-display);font-size:24px}
+.page-head p{margin:2px 0 0;color:var(--muted);font-size:14px}
+.docs-list{padding:4px 16px}
+
+/* ---------- dialogs ---------- */
+dialog{border:0;padding:0;background:var(--surface);color:var(--text);border-radius:var(--r) var(--r) 0 0;width:100%;max-width:none;
+  margin:auto 0 0;box-shadow:var(--shadow)}
+dialog::backdrop{background:rgba(10,20,22,.45)}
+.dlg-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 0}
+.dlg-head h3{font-size:18px;font-weight:700}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 16px 16px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+.field{display:flex;flex-direction:column;gap:4px}
+.field.full{grid-column:1/-1}
+.field label{font-size:12px;color:var(--muted);letter-spacing:.02em}
+.field input,.field select,.field textarea{border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;background:var(--surface);width:100%}
+.field textarea{min-height:72px;resize:vertical}
+.form-actions{grid-column:1/-1;display:flex;gap:8px;justify-content:flex-start;margin-top:4px}
+.confirm{padding:16px;display:flex;flex-direction:column;gap:14px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+.confirm p{margin:0;color:var(--muted)}
+
+.toast{position:fixed;inset-inline:0;bottom:calc(84px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;z-index:50;pointer-events:none}
+.toast span{background:var(--text);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;transform:translateY(8px);transition:.25s}
+.toast.show span{opacity:1;transform:none}
+
+/* ---------- desktop ---------- */
+@media (min-width:900px){
+  .app{height:100%}
+  .main{padding-block:20px;padding-inline:24px;display:flex;flex-direction:column}
+  .view{flex:1;min-height:0;display:flex;flex-direction:column}
+  .nav-desktop,.btn-new-desktop{display:inline-flex}
+  .bottomnav,.fab{display:none}
+  .brand .tag{margin-inline-start:4px}
+  .layout{display:grid;grid-template-columns:minmax(360px,440px) minmax(0,1fr);gap:20px;flex:1;min-height:0;max-width:1240px;width:100%;margin-inline:auto}
+  .list-col{display:flex;flex-direction:column;min-height:0}
+  .chips{flex-wrap:wrap;overflow:visible}
+  .list-scroll{flex:1;min-height:0;overflow-y:auto;padding-inline-end:4px}
+  .agenda .month{top:0}
+  .detail-panel{position:relative;inset:auto;transform:none;visibility:visible;background:transparent;overflow:visible;min-height:0;display:flex;flex-direction:column}
+  .detail-panel:not(.open) .detail-content{display:none}
+  .detail-panel.open .detail-empty{display:none}
+  .detail-content{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow-y:auto;flex:1;min-height:0}
+  .detail-head{background:transparent;border-bottom:1px solid var(--border);padding:10px 12px}
+  .detail-head .back{display:none}
+  .detail-body{padding:8px 20px 28px}
+  .detail-body .panel{border:0;border-top:1px solid var(--border);border-radius:0}
+  .detail-body .panel:first-child{border-top:0}
+  .detail-empty{flex:1;display:grid;place-items:center;border:1px dashed var(--border-strong);border-radius:var(--r);color:var(--muted)}
+  .docs-wrap{flex:1;min-height:0;display:flex;flex-direction:column}
+  .docs-wrap .panel{flex:1;min-height:0;overflow-y:auto}
+  .toast{bottom:28px}
+  dialog{border-radius:var(--r);width:min(560px,92vw);margin:auto}
+}
+@media (max-width:899px){
+  .detail-empty{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  .detail-panel,.toast span,.progress i{transition:none}
+}
+</style>
+
+<div class="app" dir="rtl" lang="he">
+  <header class="topbar">
+    <div class="brand">
+      <h1>הקלסר הרפואי</h1>
+      <span class="tag">מוקאפ · נתוני דוגמה</span>
+    </div>
+    <nav class="nav-desktop" aria-label="ניווט">
+      <button type="button" data-nav="appts" aria-current="page">תורים</button>
+      <button type="button" data-nav="docs">מסמכים כלליים</button>
+    </nav>
+    <span class="spacer"></span>
+    <button type="button" class="btn primary btn-new-desktop" id="btnNewDesktop">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      תור חדש
+    </button>
+  </header>
+
+  <main class="main">
+    <!-- ===== appointments view ===== -->
+    <section class="view" id="view-appts">
+      <div class="layout">
+        <div class="list-col">
+          <div class="toolbar">
+            <div class="chips" role="group" aria-label="סינון">
+              <button type="button" class="chip" data-filter="upcoming" aria-pressed="true">הקרובים</button>
+              <button type="button" class="chip" data-filter="month" aria-pressed="false">החודש</button>
+              <button type="button" class="chip" data-filter="nextmonth" aria-pressed="false">החודש הבא</button>
+              <button type="button" class="chip" data-filter="past" aria-pressed="false">עברו</button>
+              <button type="button" class="chip" data-filter="all" aria-pressed="false">הכול</button>
+            </div>
+            <label class="search">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+              <input type="search" id="q" placeholder="חיפוש רופא, תחום, מקום…" autocomplete="off">
+            </label>
+          </div>
+          <div class="list-scroll">
+            <div class="agenda" id="agenda"></div>
+          </div>
+        </div>
+
+        <aside class="detail-panel" id="detail" aria-live="polite">
+          <div class="detail-empty">
+            <div class="empty"><strong>בחר תור מהרשימה</strong>הפרטים, ההערות והמסמכים יופיעו כאן</div>
+          </div>
+          <div class="detail-content" id="detailContent"></div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ===== general documents view ===== -->
+    <section class="view" id="view-docs" hidden>
+      <div class="docs-wrap">
+        <div class="page-head">
+          <div>
+            <h2>מסמכים כלליים</h2>
+            <p>מסמכים שלא שייכים לתור מסוים — תעודות, סיכומים, רשימות</p>
+          </div>
+          <button type="button" class="btn primary" id="btnUploadGeneral">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0-4 4m4-4 4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+            העלאת מסמך
+          </button>
+        </div>
+        <div class="toolbar">
+          <label class="search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input type="search" id="qDocs" placeholder="חיפוש במסמכים…" autocomplete="off">
+          </label>
+        </div>
+        <div class="panel">
+          <ul class="docs-list" id="generalDocs"></ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottomnav" aria-label="ניווט">
+    <button type="button" data-nav="appts" aria-current="page">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+      תורים
+    </button>
+    <button type="button" data-nav="docs">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg>
+      מסמכים
+    </button>
+  </nav>
+  <button type="button" class="fab" id="fab" aria-label="תור חדש">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+
+  <input type="file" id="fileInput" accept="image/*,application/pdf" multiple hidden>
+
+  <dialog id="dlgForm">
+    <div class="dlg-head">
+      <h3 id="dlgTitle">תור חדש</h3>
+      <button type="button" class="iconbtn" data-close aria-label="סגור">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <form class="form" id="form" method="dialog">
+      <div class="field full"><label for="fDoctor">רופא/ה או מכון</label><input id="fDoctor" required placeholder="ד״ר לוי / מכון גסטרו"></div>
+      <div class="field"><label for="fSpec">תחום</label><input id="fSpec" list="specs" placeholder="קרדיולוגיה"></div>
+      <datalist id="specs"><option>קרדיולוגיה</option><option>עיניים</option><option>אורתופדיה</option><option>גסטרואנטרולוגיה</option><option>המטולוגיה</option><option>דימות</option><option>רפואת משפחה</option><option>אורולוגיה</option></datalist>
+      <div class="field"><label for="fCompanion">מלווה</label>
+        <select id="fCompanion"><option value="">—</option><option>אח</option><option>אחות</option><option>אחר</option></select></div>
+      <div class="field"><label for="fDate">תאריך</label><input id="fDate" type="date" required></div>
+      <div class="field"><label for="fTime">שעה</label><input id="fTime" type="time" required></div>
+      <div class="field full"><label for="fLocation">מקום</label><input id="fLocation" placeholder="בית חולים, בניין 3 קומה 2"></div>
+      <div class="field full"><label for="fNotes">הערה ראשונה (לא חובה)</label><textarea id="fNotes" placeholder="להביא הפניה וטופס 17…"></textarea></div>
+      <div class="form-actions">
+        <button type="submit" class="btn primary" id="btnSave">שמור</button>
+        <button type="button" class="btn ghost" data-close>ביטול</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlgConfirm">
+    <div class="confirm">
+      <h3 style="font-size:18px">למחוק את התור?</h3>
+      <p>השורה תימחק והאירוע יוסר מהיומן. תיקיית המסמכים בדרייב נשארת בארכיון.</p>
+      <div class="form-actions">
+        <button type="button" class="btn danger" id="btnConfirmDelete">מחק</button>
+        <button type="button" class="btn ghost" data-close>ביטול</button>
+      </div>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status"><span></span></div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  const DAYS=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+  const MONTHS=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+  const today=new Date(); today.setHours(0,0,0,0);
+  const addDays=n=>{const d=new Date(today); d.setDate(d.getDate()+n); return d;};
+  const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  const parseISO=s=>{const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d);};
+  const fmtDate=s=>{const d=parseISO(s); return `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;};
+  const dayDiff=s=>Math.round((parseISO(s)-today)/86400000);
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  /* ---------- sample data (fictional) ---------- */
+  let nextId=100;
+  let appts=[
+    {id:1,date:iso(addDays(-37)),time:'11:00',doctor:'אשפוז יום המטולוגי',specialty:'המטולוגיה',location:'בית חולים, בניין 3 קומה 2',companion:'אח',
+      notes:[{text:'להביא את כל התרופות ורשימת תרופות מעודכנת',at:iso(addDays(-40))},{text:'הרופאה ביקשה ספירת דם חוזרת בעוד חודש',at:iso(addDays(-37))}]},
+    {id:2,date:iso(addDays(-10)),time:'10:00',doctor:'מכון גסטרואנטרולוגיה',specialty:'גסטרוסקופיה',location:'בית חולים, מכון גסטרו',companion:'אחות',
+      notes:[{text:'צום מחצות. הבדיקה עברה בסדר, תוצאות ביופסיה בעוד 3 שבועות',at:iso(addDays(-10))}]},
+    {id:3,date:iso(addDays(1)),time:'08:30',doctor:'ד״ר לוי',specialty:'קרדיולוגיה',location:'מרפאת קופת חולים, לוד',companion:'אח',
+      notes:[{text:'לשאול על שילוב התרופות החדשות',at:iso(addDays(-3))}]},
+    {id:4,date:iso(addDays(5)),time:'13:15',doctor:'מכון דימות',specialty:'CT',location:'מכון דימות, רמלה',companion:'אחות',notes:[]},
+    {id:5,date:iso(addDays(15)),time:'11:00',doctor:'ד״ר פרידמן',specialty:'עיניים',location:'מרפאת עיניים, בית חולים',companion:'',
+      notes:[{text:'בדיקה לפני ניתוח קטרקט עין ימין',at:iso(addDays(-20))}]},
+    {id:6,date:iso(addDays(36)),time:'10:30',doctor:'ד״ר כהן',specialty:'אורתופדיה',location:'מרפאת קופת חולים, לוד',companion:'אח',notes:[]},
+    {id:7,date:iso(addDays(54)),time:'09:10',doctor:'ד״ר מזרחי',specialty:'אורולוגיה',location:'מרפאה יועצת, לוד',companion:'',notes:[]},
+    {id:8,date:iso(addDays(130)),time:'07:30',doctor:'מכון המטולוגיה',specialty:'ספירת דם + ביקורת',location:'בית חולים, בניין 3',companion:'אחות',notes:[]},
+  ];
+  let docs=[
+    {id:1,apptId:1,kind:'pdf',name:'זימון + טופס 17 – אשפוז יום.pdf',size:'340 KB',date:iso(addDays(-45))},
+    {id:2,apptId:1,kind:'img',name:'סיכום אשפוז יום.jpg',size:'1.2 MB',date:iso(addDays(-37))},
+    {id:3,apptId:2,kind:'pdf',name:'הנחיות לפני גסטרוסקופיה.pdf',size:'180 KB',date:iso(addDays(-30))},
+    {id:4,apptId:2,kind:'pdf',name:'זימון למכון גסטרו.pdf',size:'95 KB',date:iso(addDays(-30))},
+    {id:5,apptId:3,kind:'pdf',name:'הפניה לקרדיולוג.pdf',size:'210 KB',date:iso(addDays(-12))},
+    {id:6,apptId:4,kind:'missing',desc:'הפניה לדימות + 2 טופסי התחייבות (טופס 17)',date:iso(addDays(-50))},
+    {id:7,apptId:5,kind:'pdf',name:'הפניה לניתוח קטרקט.pdf',size:'260 KB',date:iso(addDays(-20))},
+    {id:8,apptId:5,kind:'missing',desc:'סיכום ביקור עיניים קודם',date:iso(addDays(-60))},
+    {id:20,apptId:null,kind:'pdf',name:'רשימת תרופות מעודכנת.pdf',size:'120 KB',date:iso(addDays(-8)),desc:'הדפסה מהקופה, מעודכן לחודש הזה'},
+    {id:21,apptId:null,kind:'img',name:'כרטיס קופת חולים.jpg',size:'800 KB',date:iso(addDays(-200)),desc:'צילום שני הצדדים'},
+    {id:22,apptId:null,kind:'pdf',name:'סיכום שחרור מאשפוז.pdf',size:'1.8 MB',date:iso(addDays(-95)),desc:'אשפוז של שבוע, מחלקה פנימית'},
+    {id:23,apptId:null,kind:'pdf',name:'אישור נכות – החלטת ועדה.pdf',size:'410 KB',date:iso(addDays(-320)),desc:'לצרף לבקשות עתידיות'},
+  ];
+
+  const state={filter:'upcoming',q:'',selected:null,view:'appts',editing:null,uploadTarget:null};
+
+  /* ---------- elements ---------- */
+  const $=s=>document.querySelector(s);
+  const agendaEl=$('#agenda'), detailEl=$('#detail'), detailContent=$('#detailContent');
+  const dlgForm=$('#dlgForm'), dlgConfirm=$('#dlgConfirm'), fileInput=$('#fileInput'), toastEl=$('#toast');
+
+  /* ---------- icons ---------- */
+  const I={
+    pin:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-11a7 7 0 0 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>',
+    doc:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>',
+    chev:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>',
+    back:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>',
+    edit:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
+    trash:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>',
+    cal:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+    open:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9"/><path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg>',
+    share:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4m0 0-4 4m4-4 4 4"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>',
+    upload:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0-4 4m4-4 4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>',
+    person:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
+  };
+
+  /* ---------- helpers ---------- */
+  function toast(msg){toastEl.querySelector('span').textContent=msg; toastEl.classList.add('show'); clearTimeout(toast.t); toast.t=setTimeout(()=>toastEl.classList.remove('show'),2200);}
+  const isDesktop=()=>matchMedia('(min-width:900px)').matches;
+  const docsFor=id=>docs.filter(d=>d.apptId===id);
+  const byId=id=>appts.find(a=>a.id===id);
+
+  function relPill(dateStr){
+    const n=dayDiff(dateStr);
+    if(n===0) return '<span class="pill today">היום</span>';
+    if(n===1) return '<span class="pill today">מחר</span>';
+    if(n>1&&n<=7) return `<span class="pill soon">בעוד ${n} ימים</span>`;
+    return '';
+  }
+
+  function filtered(){
+    const q=state.q.trim();
+    const ym=d=>d.slice(0,7);
+    const thisYm=iso(today).slice(0,7);
+    const nm=new Date(today.getFullYear(),today.getMonth()+1,1);
+    const nextYm=iso(nm).slice(0,7);
+    let list=appts.filter(a=>{
+      if(q && !`${a.doctor} ${a.specialty} ${a.location}`.includes(q)) return false;
+      switch(state.filter){
+        case 'upcoming': return dayDiff(a.date)>=0;
+        case 'month': return ym(a.date)===thisYm;
+        case 'nextmonth': return ym(a.date)===nextYm;
+        case 'past': return dayDiff(a.date)<0;
+        default: return true;
+      }
+    });
+    list.sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+    if(state.filter==='past') list.reverse();
+    return list;
+  }
+
+  /* ---------- render: agenda ---------- */
+  function renderAgenda(){
+    const list=filtered();
+    if(!list.length){
+      agendaEl.innerHTML=`<div class="empty"><strong>אין תורים להצגה</strong>${state.q?'נסה חיפוש אחר':'לחץ על + כדי להוסיף תור'}</div>`;
+      return;
+    }
+    const groups=new Map();
+    for(const a of list){const k=a.date.slice(0,7); if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(a);}
+    let html='';
+    for(const [k,items] of groups){
+      const [y,m]=k.split('-').map(Number);
+      html+=`<h2 class="month"><span>${MONTHS[m-1]} ${y}</span><small>${items.length} ${items.length===1?'תור':'תורים'}</small></h2><div class="cards">`;
+      for(const a of items){
+        const d=parseISO(a.date), n=dayDiff(a.date), nd=docsFor(a.id).length;
+        const cls=['card', n<0?'past':'', n===0?'today':''].join(' ').trim();
+        html+=`<button type="button" class="${cls}" data-id="${a.id}" aria-current="${state.selected===a.id}">
+          <span class="date-block"><span class="day">${d.getDate()}</span><span class="wd">${DAYS[d.getDay()]}</span></span>
+          <span class="card-body">
+            <span class="row1"><span class="time">${a.time}</span>${relPill(a.date)}</span>
+            <span class="title" style="display:block">${esc(a.doctor)}${a.specialty?` · ${esc(a.specialty)}`:''}</span>
+            <span class="meta">${I.pin}<span style="overflow:hidden;text-overflow:ellipsis">${esc(a.location||'—')}</span></span>
+            <span class="meta">${I.doc}<span class="count">${nd?`${nd} ${nd===1?'מסמך':'מסמכים'}`:'אין מסמכים'}</span>${a.companion?`<span>·</span>${I.person}<span>${esc(a.companion)}</span>`:''}</span>
+          </span>
+          <span class="chev">${I.chev}</span>
+        </button>`;
+      }
+      html+='</div>';
+    }
+    agendaEl.innerHTML=html;
+  }
+
+  /* ---------- render: detail ---------- */
+  function docRow(d){
+    if(d.kind==='missing'){
+      return `<li class="doc" data-doc="${d.id}">
+        <span class="doc-icon missing">!</span>
+        <div class="doc-main"><div class="doc-name">${esc(d.desc)}</div><div class="doc-sub">חסר קובץ — הועבר מהבוט, יש להעלות מחדש מהטלגרם</div></div>
+        <div class="doc-actions"><button type="button" class="btn small" data-act="upload-missing">${I.upload} העלה</button></div>
+      </li>`;
+    }
+    if(d.kind==='uploading'){
+      return `<li class="doc" data-doc="${d.id}">
+        <span class="doc-icon">…</span>
+        <div class="doc-main"><div class="doc-name">${esc(d.name)}</div><div class="progress"><i style="width:${d.progress||0}%"></i></div><div class="doc-sub uploading-hint">מעלה לדרייב… ${d.progress||0}%</div></div>
+        <div class="doc-actions"></div>
+      </li>`;
+    }
+    return `<li class="doc" data-doc="${d.id}">
+      <span class="doc-icon ${d.kind}">${d.kind==='pdf'?'PDF':'JPG'}</span>
+      <div class="doc-main"><div class="doc-name">${esc(d.name)}</div><div class="doc-sub">${d.desc?esc(d.desc)+' · ':''}הועלה ${fmtDate(d.date)} · ${d.size}</div></div>
+      <div class="doc-actions">
+        <button type="button" class="iconbtn" data-act="open" title="פתח בדרייב" aria-label="פתח בדרייב">${I.open}</button>
+        <button type="button" class="iconbtn" data-act="share" title="שתף / הדפס" aria-label="שתף">${I.share}</button>
+      </div>
+    </li>`;
+  }
+
+  function renderDetail(){
+    const a=byId(state.selected);
+    if(!a){detailEl.classList.remove('open'); detailContent.innerHTML=''; return;}
+    const d=parseISO(a.date), n=dayDiff(a.date), ds=docsFor(a.id);
+    const when=`יום ${DAYS[d.getDay()]}, ${fmtDate(a.date)} · ${a.time}`;
+    detailContent.innerHTML=`
+      <div class="detail-head">
+        <button type="button" class="iconbtn back" data-act="back" aria-label="חזרה">${I.back}</button>
+        <div class="grow"><div style="font-weight:700">${esc(a.doctor)}</div><div class="sub">${when}</div></div>
+        <button type="button" class="iconbtn" data-act="edit" aria-label="עריכה" title="עריכה">${I.edit}</button>
+        <button type="button" class="iconbtn danger" data-act="delete" aria-label="מחיקה" title="מחיקה">${I.trash}</button>
+      </div>
+      <div class="detail-body">
+        <section class="panel">
+          <div class="hero">
+            <span class="date-block"><span class="day">${d.getDate()}</span><span class="mon">${MONTHS[d.getMonth()]}</span></span>
+            <div>
+              <h2>${esc(a.doctor)}</h2>
+              ${a.specialty?`<div class="spec">${esc(a.specialty)}</div>`:''}
+              <div class="when">${when} ${relPill(a.date)}${n<0?'<span class="pill soon">עבר</span>':''}</div>
+            </div>
+          </div>
+          <dl class="kv">
+            <dt>מקום</dt><dd>${esc(a.location||'—')}</dd>
+            <dt>מלווה</dt><dd>${esc(a.companion||'—')}</dd>
+            <dt>יומן</dt><dd><a href="#" style="color:var(--accent-ink)" data-act="gcal">${I.cal}<span style="vertical-align:middle;margin-inline-start:4px">פתח את האירוע ביומן גוגל</span></a></dd>
+          </dl>
+        </section>
+
+        <section class="panel section">
+          <div class="section-head">
+            <h3>מסמכים<span>${ds.length}</span></h3>
+            <button type="button" class="btn primary small" data-act="upload">${I.upload} העלאת מסמך</button>
+          </div>
+          ${ds.length?`<ul class="docs">${ds.map(docRow).join('')}</ul>`:`<div class="empty" style="padding:20px"><strong>אין מסמכים לתור הזה</strong>הפניה, טופס 17, סיכום ביקור — צלם או בחר קובץ</div>`}
+        </section>
+
+        <section class="panel section">
+          <div class="section-head"><h3>הערות<span>${a.notes.length}</span></h3></div>
+          ${a.notes.length?`<ul class="notes">${a.notes.map(nt=>`<li><div>${esc(nt.text)}</div><div class="at">${fmtDate(nt.at)}</div></li>`).join('')}</ul>`:'<div class="doc-sub">עוד אין הערות</div>'}
+          <form class="note-form" data-act="note-form">
+            <input id="noteInput" placeholder="הוסף הערה…" autocomplete="off" required>
+            <button type="submit" class="btn primary">הוסף</button>
+          </form>
+        </section>
+      </div>`;
+    detailEl.classList.add('open');
+  }
+
+  function select(id){
+    state.selected=id; renderAgenda(); renderDetail();
+    if(!isDesktop()) detailEl.scrollTop=0;
+  }
+  function closeDetail(){state.selected=null; renderAgenda(); renderDetail();}
+
+  /* ---------- render: general docs ---------- */
+  function renderGeneralDocs(){
+    const q=($('#qDocs').value||'').trim();
+    const list=docs.filter(d=>d.apptId===null && (!q || `${d.name||''} ${d.desc||''}`.includes(q)))
+      .sort((a,b)=>b.date.localeCompare(a.date));
+    $('#generalDocs').innerHTML=list.length?list.map(docRow).join(''):`<li class="empty"><strong>לא נמצאו מסמכים</strong></li>`;
+  }
+
+  /* ---------- navigation ---------- */
+  function showView(v){
+    state.view=v;
+    $('#view-appts').hidden=v!=='appts';
+    $('#view-docs').hidden=v!=='docs';
+    document.querySelectorAll('[data-nav]').forEach(b=>b.setAttribute('aria-current',b.dataset.nav===v?'page':'false'));
+    if(v==='docs') renderGeneralDocs();
+  }
+  document.querySelectorAll('[data-nav]').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.nav)));
+
+  /* ---------- filters / search ---------- */
+  document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{
+    state.filter=c.dataset.filter;
+    document.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed',x===c));
+    renderAgenda();
+  }));
+  $('#q').addEventListener('input',e=>{state.q=e.target.value; renderAgenda();});
+  $('#qDocs').addEventListener('input',renderGeneralDocs);
+
+  /* ---------- agenda clicks ---------- */
+  agendaEl.addEventListener('click',e=>{
+    const card=e.target.closest('.card'); if(!card) return;
+    select(Number(card.dataset.id));
+  });
+
+  /* ---------- detail actions ---------- */
+  detailEl.addEventListener('click',e=>{
+    const btn=e.target.closest('[data-act]'); if(!btn) return;
+    const a=byId(state.selected);
+    switch(btn.dataset.act){
+      case 'back': closeDetail(); break;
+      case 'edit': openForm(a); break;
+      case 'delete': dlgConfirm.showModal(); break;
+      case 'gcal': e.preventDefault(); toast('במוצר האמיתי: נפתח האירוע ביומן גוגל'); break;
+      case 'upload': state.uploadTarget=a.id; fileInput.click(); break;
+      case 'upload-missing': state.uploadTarget=a.id; state.replaceDoc=Number(btn.closest('.doc').dataset.doc); fileInput.click(); break;
+      case 'open': toast('במוצר האמיתי: הקובץ נפתח מדרייב'); break;
+      case 'share': toast('במוצר האמיתי: תפריט שיתוף של הטלפון (הדפסה, מייל, וואטסאפ)'); break;
+    }
+  });
+  detailEl.addEventListener('submit',e=>{
+    if(!e.target.matches('[data-act="note-form"]')) return;
+    e.preventDefault();
+    const a=byId(state.selected); const inp=e.target.querySelector('input');
+    a.notes.push({text:inp.value.trim(),at:iso(today)});
+    renderDetail(); toast('ההערה נשמרה');
+  });
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!isDesktop()&&detailEl.classList.contains('open')) closeDetail();});
+
+  /* general-docs page actions */
+  $('#generalDocs').addEventListener('click',e=>{
+    const btn=e.target.closest('[data-act]'); if(!btn) return;
+    if(btn.dataset.act==='open') toast('במוצר האמיתי: הקובץ נפתח מדרייב');
+    if(btn.dataset.act==='share') toast('במוצר האמיתי: תפריט שיתוף של הטלפון');
+  });
+  $('#btnUploadGeneral').addEventListener('click',()=>{state.uploadTarget=null; state.replaceDoc=null; fileInput.click();});
+
+  /* ---------- simulated upload ---------- */
+  fileInput.addEventListener('change',()=>{
+    const files=[...fileInput.files]; fileInput.value='';
+    if(!files.length) return;
+    const target=state.uploadTarget;
+    if(state.replaceDoc){docs=docs.filter(d=>d.id!==state.replaceDoc); state.replaceDoc=null;}
+    const created=files.map(f=>{
+      const kind=f.type==='application/pdf'?'pdf':'img';
+      const doc={id:nextId++,apptId:target,kind:'uploading',finalKind:kind,name:f.name,size:f.size>1e6?(f.size/1e6).toFixed(1)+' MB':Math.max(1,Math.round(f.size/1024))+' KB',date:iso(today),progress:0};
+      docs.push(doc); return doc;
+    });
+    const rerender=()=>{ if(target===null) renderGeneralDocs(); else { renderDetail(); } renderAgenda(); };
+    rerender();
+    let p=0;
+    const tick=setInterval(()=>{
+      p=Math.min(100,p+Math.round(12+Math.random()*18));
+      created.forEach(d=>d.progress=p);
+      if(p>=100){clearInterval(tick); created.forEach(d=>{d.kind=d.finalKind; delete d.progress;}); rerender(); toast(created.length===1?'המסמך הועלה לדרייב':`${created.length} מסמכים הועלו לדרייב`);}
+      else rerender();
+    },350);
+  });
+
+  /* ---------- form ---------- */
+  function openForm(a){
+    state.editing=a?a.id:null;
+    $('#dlgTitle').textContent=a?'עריכת תור':'תור חדש';
+    $('#fDoctor').value=a?.doctor||''; $('#fSpec').value=a?.specialty||''; $('#fCompanion').value=a?.companion||'';
+    $('#fDate').value=a?.date||iso(addDays(7)); $('#fTime').value=a?.time||'09:00'; $('#fLocation').value=a?.location||'';
+    $('#fNotes').value=''; $('#fNotes').closest('.field').hidden=!!a;
+    dlgForm.showModal(); $('#fDoctor').focus();
+  }
+  $('#fab').addEventListener('click',()=>openForm(null));
+  $('#btnNewDesktop').addEventListener('click',()=>openForm(null));
+  $('#form').addEventListener('submit',e=>{
+    e.preventDefault();
+    const data={doctor:$('#fDoctor').value.trim(),specialty:$('#fSpec').value.trim(),companion:$('#fCompanion').value,
+      date:$('#fDate').value,time:$('#fTime').value,location:$('#fLocation').value.trim()};
+    if(!data.doctor||!data.date||!data.time) return;
+    let id=state.editing;
+    if(id){Object.assign(byId(id),data); toast('התור עודכן — גם ביומן');}
+    else{
+      id=nextId++; const notes=[]; const first=$('#fNotes').value.trim(); if(first) notes.push({text:first,at:iso(today)});
+      appts.push({id,notes,...data}); toast('התור נשמר: שורה, אירוע ביומן ותיקייה בדרייב');
+    }
+    dlgForm.close();
+    if(state.filter!=='all'){state.filter=dayDiff(data.date)<0?'past':'upcoming'; document.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed',x.dataset.filter===state.filter));}
+    showView('appts'); select(id);
+  });
+  $('#btnConfirmDelete').addEventListener('click',()=>{
+    appts=appts.filter(a=>a.id!==state.selected); dlgConfirm.close(); closeDetail(); toast('התור נמחק. התיקייה הועברה לארכיון');
+  });
+  document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>b.closest('dialog').close()));
+  [dlgForm,dlgConfirm].forEach(d=>d.addEventListener('click',e=>{if(e.target===d) d.close();}));
+
+  /* ---------- boot ---------- */
+  renderAgenda();
+  if(isDesktop()){ const first=filtered()[0]; if(first) select(first.id); }
+  matchMedia('(min-width:900px)').addEventListener('change',()=>{renderAgenda(); renderDetail();});
+})();
+</script>
