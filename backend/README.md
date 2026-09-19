@@ -22,6 +22,6 @@
 ## פריסה
 
 ```
-clasp push
-clasp deploy -i <deploymentId>   # תמיד -i, אחרת כתובת ה-/exec משתנה
+clasp push --force
+clasp create-deployment -i <deploymentId>   # clasp 3.x. תמיד -i, אחרת כתובת ה-/exec משתנה
 ```

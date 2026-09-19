@@ -13,9 +13,9 @@
 | מה | פקודה |
 |---|---|
 | האתר | `git push` ל-`main` |
-| ה-backend | `cd backend && clasp push && clasp deploy -i <deploymentId>` |
+| ה-backend | `cd backend && clasp push --force && clasp create-deployment -i <deploymentId>` |
 
-> **אף פעם לא** `clasp deploy` בלי `-i` — זה יוצר deployment חדש ומשנה את כתובת ה-`/exec`.
+> **אף פעם לא** `create-deployment` בלי `-i` — זה יוצר deployment חדש ומשנה את כתובת ה-`/exec`.
 
 ## פרטיות
 

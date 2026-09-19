@@ -25,5 +25,6 @@ exists, restate its pending step before touching code.
 - Verification is live, not compiled: curl against `/exec` for the backend, Playwright at
   390px and 1280px for the site. Create a test appointment, verify Sheet + Calendar + Drive,
   then delete it and clean `ארכיון/`.
-- Backend deploy: `clasp push && clasp deploy -i <deploymentId>` (never a new deployment —
-  it changes the `/exec` URL). Site deploy: `git push` to `main`.
+- Backend deploy (clasp 3.x): `cd backend && clasp push --force && clasp create-deployment -i <deploymentId>` (never without `-i` —
+  it changes the `/exec` URL). Site deploy: `git push` to `main` → `.github/workflows/pages.yml` publishes `site/`.
+- Operational IDs (deployment id, `/exec` URL, Pages URL, scriptId) live in `docs/handoff.md`.
