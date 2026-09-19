@@ -37,6 +37,10 @@ var COLS = {
 
 /** Max upload size accepted from the client, in bytes (decoded). */
 var MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
+/** Ceiling for reading a file back out (documents.fetch). Base64 inflates the
+ *  response by ~4/3 and Apps Script caps the response well below the upload
+ *  limit, so this is deliberately much smaller. */
+var MAX_FETCH_BYTES = 8 * 1024 * 1024;
 
 // ---------------------------------------------------------------- properties
 

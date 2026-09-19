@@ -277,8 +277,8 @@
       '<div class="doc-main"><div class="doc-name">' + esc(d.file_name) + '</div>' +
       '<div class="doc-sub">' + sub.join(' · ') + '</div></div>' +
       '<div class="doc-actions">' +
-      '<button type="button" class="iconbtn" data-act="open" title="פתח בדרייב" aria-label="פתח בדרייב">' + I.open + '</button>' +
-      '<button type="button" class="iconbtn" data-act="share" title="שתף / הדפס" aria-label="שתף">' + I.share + '</button>' +
+      '<button type="button" class="iconbtn" data-act="open" title="פתח את המסמך" aria-label="פתח את המסמך">' + I.open + '</button>' +
+      '<button type="button" class="iconbtn" data-act="share" title="שתף את הקובץ" aria-label="שתף את הקובץ">' + I.share + '</button>' +
       '<button type="button" class="iconbtn danger" data-act="delete-doc" title="מחק" aria-label="מחק מסמך">' + I.trashSmall + '</button>' +
       '</div></li>';
   }
@@ -830,15 +830,90 @@
     return null;
   }
 
-  function openDoc(id) {
-    var d = findDoc(id);
+  /**
+   * Object URLs for documents fetched this session. Kept alive until the page
+   * is unloaded: a blob: URL handed to a new tab dies the moment it is
+   * revoked, so revoking eagerly would break the tab we just opened.
+   */
+  var blobUrls = {};
+
+  function docBlobUrl(id) {
+    if (blobUrls[id]) return Promise.resolve(blobUrls[id]);
+    return api.fetchDocument(id).then(function (got) {
+      if (!got) return null;
+      blobUrls[id] = URL.createObjectURL(got.blob);
+      return blobUrls[id];
+    });
+  }
+
+  window.addEventListener('pagehide', function () {
+    for (var k in blobUrls) if (blobUrls.hasOwnProperty(k)) URL.revokeObjectURL(blobUrls[k]);
+  });
+
+  /** Last resort when the bytes cannot be had: the Drive page. */
+  function openDriveLink(d) {
     if (d && d.web_view_link) window.open(d.web_view_link, '_blank', 'noopener');
     else toast('אין קישור לקובץ');
   }
 
+  /**
+   * Opens the document itself. Safari blocks window.open() inside an async
+   * callback, so the tab is opened synchronously on the click and pointed at
+   * the blob once it arrives.
+   */
+  function openDoc(id) {
+    var d = findDoc(id);
+    if (!d) return;
+    if (!d.file_id) { toast('המסמך עדיין לא הועלה'); return; }
+
+    var tab = window.open('', '_blank');
+    docBlobUrl(id).then(function (url) {
+      if (!url) {
+        if (tab) tab.close();
+        openDriveLink(d);
+        return;
+      }
+      if (tab) tab.location = url;
+      else window.open(url, '_blank', 'noopener');
+    }).catch(function (err) {
+      if (tab) tab.close();
+      if (err && err.code === 'unauthorized') { lock(); return; }
+      openDriveLink(d);
+    });
+  }
+
+  /**
+   * Shares the file itself, so the recipient gets a real PDF or photo rather
+   * than a Drive link they may have no access to. Falls back to sharing the
+   * link when the platform cannot share files or the file is too large.
+   */
   function shareDoc(id) {
     var d = findDoc(id);
-    if (!d || !d.web_view_link) { toast('אין קישור לקובץ'); return; }
+    if (!d) return;
+    if (!d.file_id) { toast('המסמך עדיין לא הועלה'); return; }
+
+    api.fetchDocument(id).then(function (got) {
+      if (got && canShareFile()) {
+        var file = new File([got.blob], got.fileName, { type: got.mime });
+        if (navigator.canShare && !navigator.canShare({ files: [file] })) return shareLink(d);
+        return navigator.share({ files: [file], title: got.fileName }).catch(function (err) {
+          // The user dismissing the share sheet is not a failure.
+          if (err && err.name !== 'AbortError') shareLink(d);
+        });
+      }
+      return shareLink(d);
+    }).catch(function (err) {
+      if (err && err.code === 'unauthorized') { lock(); return; }
+      shareLink(d);
+    });
+  }
+
+  function canShareFile() {
+    return !!(navigator.share && navigator.canShare && window.File);
+  }
+
+  function shareLink(d) {
+    if (!d.web_view_link) { toast('אין קישור לקובץ'); return; }
     if (navigator.share) {
       navigator.share({ title: d.file_name, url: d.web_view_link }).catch(function () {});
     } else if (navigator.clipboard) {
@@ -846,7 +921,7 @@
         toast('הקישור הועתק');
       }, function () { toast('לא הצלחתי להעתיק'); });
     } else {
-      openDoc(id);
+      openDriveLink(d);
     }
   }
 

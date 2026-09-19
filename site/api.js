@@ -191,6 +191,30 @@
     updateDocument: function (id, description) {
       return call('documents.update', { id: id, description: description });
     },
-    deleteDocument: function (id) { return call('documents.delete', { id: id }); }
+    deleteDocument: function (id) { return call('documents.delete', { id: id }); },
+
+    /**
+     * Pulls the file bytes back from Drive as a Blob, so a document can be
+     * viewed or shared as itself rather than as a Drive link. Resolves to
+     * null when the file is too large to inline — the caller then falls back
+     * to web_view_link.
+     */
+    fetchDocument: function (id) {
+      return call('documents.fetch', { id: id }).then(function (data) {
+        if (data.too_large) return null;
+        return {
+          blob: base64ToBlob(data.base64, data.mime),
+          fileName: data.file_name,
+          mime: data.mime
+        };
+      });
+    }
   };
+
+  function base64ToBlob(base64, mime) {
+    var binary = atob(base64);
+    var bytes = new Uint8Array(binary.length);
+    for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return new Blob([bytes], { type: mime || 'application/octet-stream' });
+  }
 })(window);

@@ -68,6 +68,7 @@ var ACTIONS = {
   'documents.upload':    actDocUpload_,
   'documents.update':    actDocUpdate_,
   'documents.delete':    actDocDelete_,
+  'documents.fetch':     actDocFetch_,
   'migration.import':    actMigrationImport_,
   'migration.status':    actMigrationStatus_,
   'diagnose':            actDiagnose_
@@ -209,9 +210,19 @@ function actApptDelete_(req) {
 
   var eventDeleted = deleteEvent_(existing.event_id);
   var archived = archiveApptFolder_(existing.folder_id);
+
+  // The document rows go with the appointment, or they linger as orphans the
+  // UI can never show while still counting towards "מסמכים בדרייב". The files
+  // themselves are NOT trashed — they ride along inside the archived folder.
+  var docsRemoved = 0;
+  readAll_(TAB_DOCS).forEach(function (d) {
+    if (String(d.appointment_id) === id) { deleteRow_(TAB_DOCS, d.id); docsRemoved++; }
+  });
+
   deleteRow_(TAB_APPTS, id);
 
-  return { id: id, event_deleted: eventDeleted, folder_archived: archived };
+  return { id: id, event_deleted: eventDeleted, folder_archived: archived,
+           documents_removed: docsRemoved };
 }
 
 // -------------------------------------------------------------------- notes
@@ -309,6 +320,29 @@ function actDocUpdate_(req) {
   var id = str_(req.id);
   if (!getRow_(TAB_DOCS, id)) throw new Error('המסמך לא נמצא');
   return { document: updateRow_(TAB_DOCS, id, { description: str_(req.description) }) };
+}
+
+/**
+ * Returns the file bytes themselves, so the site can view or share the real
+ * document rather than a Drive link the recipient may not be able to open.
+ * A file too large to inline answers ok:false/too_large and the caller falls
+ * back to web_view_link.
+ */
+function actDocFetch_(req) {
+  var id = str_(req.id);
+  var doc = getRow_(TAB_DOCS, id);
+  if (!doc) throw new Error('המסמך לא נמצא');
+  if (!str_(doc.file_id)) throw new Error('המסמך עדיין לא הועלה');
+  try {
+    var got = readFile_(doc.file_id);
+    return {
+      id: id, file_name: got.file_name, mime: got.mime,
+      size: got.size, base64: got.base64
+    };
+  } catch (e) {
+    if (e && e.tooLarge) return { id: id, too_large: true, web_view_link: str_(doc.web_view_link) };
+    throw e;
+  }
 }
 
 /** Only for a file uploaded by mistake — it trashes the Drive file too. */

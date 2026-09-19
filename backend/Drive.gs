@@ -88,6 +88,29 @@ function saveFile_(folder, fileName, mimeType, base64) {
   };
 }
 
+/**
+ * Reads one file back as base64 so the site can hand the real bytes to the
+ * share sheet instead of a Drive link. Apps Script has to hold the whole
+ * payload in memory and base64 inflates it by ~4/3, so anything above
+ * MAX_FETCH_BYTES is refused and the caller falls back to the link.
+ */
+function readFile_(fileId) {
+  var file = DriveApp.getFileById(fileId);
+  var size = Number(file.getSize());
+  if (size > MAX_FETCH_BYTES) {
+    var err = new Error('too_large_to_fetch');
+    err.tooLarge = true;
+    throw err;
+  }
+  var blob = file.getBlob();
+  return {
+    file_name: file.getName(),
+    mime: blob.getContentType() || file.getMimeType(),
+    size: String(size),
+    base64: Utilities.base64Encode(blob.getBytes())
+  };
+}
+
 function trashFile_(fileId) {
   if (!str_(fileId)) return false;
   try {

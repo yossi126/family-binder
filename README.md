@@ -6,7 +6,9 @@
 - **Backend:** Google Apps Script (Web App)
 - **נתונים:** Google Sheets (master) · Google Drive (מסמכים) · Google Calendar (תזכורות)
 
-התיעוד המלא: [`docs/plan.md`](docs/plan.md) · יומן העבודה: [`docs/progress.md`](docs/progress.md)
+**למשתמש:** [`docs/user-guide.md`](docs/user-guide.md) — איך מוסיפים תור, מעלים מסמך, מחליפים קוד כניסה.
+
+למפתח: [`docs/plan.md`](docs/plan.md) · יומן העבודה: [`docs/progress.md`](docs/progress.md) · מצב נוכחי: [`docs/handoff.md`](docs/handoff.md)
 
 ## פריסה
 

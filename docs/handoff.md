@@ -1,6 +1,6 @@
 # handoff — family-binder
 
-עודכן: 2026-09-19, סוף סשן המימוש הראשון.
+עודכן: 2026-09-19, סשן 2.
 
 ## איפה אנחנו
 
@@ -12,8 +12,11 @@
 | 3 מיגרציה מהבוט | ✅ 13 תורים · 13 תיקיות · 11 מסמכים `missing` · 7 הערות · 13→13 אירועים ביומן (0 כפולים) |
 | 4 GitHub Pages | ✅ חי, CORS אומת מה-origin האמיתי |
 | עיצוב | ✅ Heebo בלבד · מצב כהה הוסר · פלטת iOS (כחול מערכת, `#F2F2F7`) |
-| **S5 בדיקה באייפון** | ⏳ **הצעד הבא** — לא בוצע |
-| Phase 5 / S6 כיבוי הבוט | ⏳ אחרי S5 |
+| S5 בדיקה באייפון | 🟡 ראשוני תקין (המשתמש). מצלמה/HEIC/מסך-הבית עדיין אצלו |
+| תיעוד למשתמש | ✅ `docs/user-guide.md` |
+| צפייה/שיתוף של הקובץ עצמו | ✅ `documents.fetch`, אומת חי `@7` |
+| **Phase 5 גיבוי DB** | ⏳ **הצעד הבא** — דורש גישת המשתמש ל-VM |
+| S6 כיבוי הבוט | ⏳ אחרי הגיבוי |
 
 ## מזהים תפעוליים (לא סודות)
 
@@ -24,7 +27,7 @@
 | Apps Script scriptId | `1PLyZP7Vl-dtaOPodtCE3oeC1q5-76oY0QMmVtcNCa95Tk2dCuh2Mn4Hj` |
 | deployment id | `AKfycbwohxgzwAZOILyiA2GnO6WY35nK1hZU-bHx0txYKnOfrVhIGp5zE_ePL2kSViIM4WHj` |
 | `/exec` URL | ב-`site/config.js` וב-`backend/.exec-url` |
-| deployment version חי | `@5` |
+| deployment version חי | `@7` |
 | PIN | **רק** ב-Script Properties + `backend/.pin` (git-ignored). לא בצ'אט. |
 
 ## פקודות
@@ -51,15 +54,19 @@ git push origin main       # .github/workflows/pages.yml מפרסם את site/
 
 ## הבא — בדיוק
 
-1. המשתמש מבצע S5 (ראה `docs/next-session-prompt.md`). ממתינים ל-`iphone: ok` + פידבק על הפלטה.
-2. אם נשבר משהו באייפון → תיקון, `git push`, אימות חי חוזר.
-3. Phase 5: גיבוי `family_agent.db` מה-VM ל-`migration/` (git-ignored), ואז **S6** — המשתמש מאשר `sudo systemctl disable --now family-agent`.
-4. סיום: README קצר למשתמש הקצה (איך מוסיפים תור / מעלים מסמך / מחליפים PIN), handoff סופי.
+1. **המשתמש:** משתף את תיקיית ה-root בדרייב ואת היומן עם האחות, ושולח לה כתובת + PIN
+   (לא דרך הצ'אט). שארית S5 ממשיכה אצלו; תקלות שיעלו → תיקון, `git push`, אימות חי.
+2. **Phase 5 — גיבוי.** `scp` של `data/family_agent.db` מה-VM ל-`migration/` (git-ignored).
+   **חסרים לי user@host והנתיב המלא ל-DB** — לא לכתוב פקודה עם placeholder.
+3. **S6** — אחרי שהגיבוי קיים: המשתמש מאשר `sudo systemctl disable --now family-agent`.
+   ה-VM עצמו נשאר חי עד שהמשתמש מרוצה; מחיקתו מקונסולת Oracle לא בסקופ.
+4. handoff סופי אחרי S6.
 
 ## דברים לדעת
 
-- **תיקיית בדיקה אחת** נשארה תחת `ארכיון/` בדרייב (מה-`test-api.sh`). לא מזיקה; אפשר למחוק ידנית.
-- `docs/screenshots/` מכיל 3 צילומים מהעיצוב **הישן** (טורקיז). נתוני בדיקה בלבד. לעדכן או למחוק.
+- **תיקיות בדיקה** נשארו תחת `ארכיון/` בדרייב (מ-`test-api.sh` ומבדיקות ה-fetch). לא מזיקות; אפשר למחוק ידנית.
+- `documents.fetch` מוגבל ל-8MB (`MAX_FETCH_BYTES`). נמדד: 7MB עובר (תשובה 9.79MB), 9MB נדחה עם קישור.
+- מחיקת תור מוחקת עכשיו גם את שורות המסמכים שלו. הקבצים **לא** נמחקים — הם נוסעים עם התיקייה לארכיון.
 - דטקטור impeccable רץ במצב degraded (בלי htmlparser2) — ממצאיו הם undercount.
 - `clasp create-script` דורס את `appsscript.json` — אחרי create תמיד `git checkout appsscript.json` לפני push.
 - `curl -L` נכשל מול Apps Script (411). ההארנס עושה POST → קורא `redirect_url` → GET.
