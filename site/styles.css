@@ -285,7 +285,10 @@ input,textarea{caret-color:var(--accent)}
    form or the on-screen keyboard; the body scrolls inside it instead. dvh, not
    vh, so iOS Safari's collapsing toolbars do not hide the last field. */
 dialog{border:0;padding:0;background:var(--sheet);color:var(--ink);border-radius:16px 16px 0 0;width:100%;max-width:none;margin:auto 0 0;box-shadow:var(--shadow-3);
-  max-height:90dvh;display:flex;flex-direction:column;overflow:hidden}
+  max-height:90dvh;overflow:hidden}
+/* Scoped to [open]: setting `display` on a bare `dialog` overrides the UA's
+   `dialog:not([open]){display:none}` and leaves closed dialogs on the page. */
+dialog[open]{display:flex;flex-direction:column}
 dialog::backdrop{background:rgba(0,0,0,.4)}
 .dlg-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 0;flex:none}
 .dlg-head h3{font-size:18px;font-weight:700}
