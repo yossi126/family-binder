@@ -64,6 +64,7 @@ var ACTIONS = {
   'appointments.update': actApptUpdate_,
   'appointments.delete': actApptDelete_,
   'notes.add':           actNoteAdd_,
+  'notes.delete':        actNoteDelete_,
   'documents.upload':    actDocUpload_,
   'documents.update':    actDocUpdate_,
   'documents.delete':    actDocDelete_,
@@ -224,6 +225,26 @@ function actNoteAdd_(req) {
   var notes = notesFor_(apptId);
   updateEvent_(appt, notes);   // keep the calendar description in sync
   return { note: note, notes: notes };
+}
+
+/**
+ * Removes one note. The calendar description is rebuilt from what is left, so
+ * a note deleted here also disappears from the event.
+ */
+function actNoteDelete_(req) {
+  var id = str_(req.id);
+  var note = getRow_(TAB_NOTES, id);
+  if (!note) throw new Error('ההערה לא נמצאה');
+
+  deleteRow_(TAB_NOTES, id);
+
+  var apptId = str_(note.appointment_id);
+  var notes = apptId ? notesFor_(apptId) : [];
+  if (apptId) {
+    var appt = getRow_(TAB_APPTS, apptId);
+    if (appt) updateEvent_(appt, notes);
+  }
+  return { id: id, notes: notes };
 }
 
 // ---------------------------------------------------------------- documents

@@ -35,12 +35,21 @@ function readAll_(tabName) {
   return out;
 }
 
-/** Appends one object as a row, in COLS order. Returns the object. */
+/**
+ * Appends one object as a row, in COLS order.
+ *
+ * Deliberately not appendRow: that ignores the column format and lets Sheets
+ * reinterpret the value, which turns '08:30' into '8:30' and an ISO date into
+ * a locale date. Writing into an explicitly text-formatted range keeps every
+ * cell exactly as sent.
+ */
 function insertRow_(tabName, obj) {
   var sh = tab_(tabName);
   var cols = COLS[tabName];
   var row = cols.map(function (c) { return obj[c] === undefined ? '' : String(obj[c]); });
-  sh.appendRow(row);
+  var range = sh.getRange(sh.getLastRow() + 1, 1, 1, cols.length);
+  range.setNumberFormat('@');
+  range.setValues([row]);
   return obj;
 }
 
@@ -72,6 +81,7 @@ function updateRow_(tabName, id, patch) {
       ? str_(patch[key])
       : str_(current[c]);
   }
+  range.setNumberFormat('@');
   range.setValues([cols.map(function (c2) { return obj[c2]; })]);
   return obj;
 }
@@ -116,5 +126,7 @@ function metaSet_(key, value) {
       }
     }
   }
-  sh.appendRow([key, String(value)]);
+  var range = sh.getRange(sh.getLastRow() + 1, 1, 1, 2);
+  range.setNumberFormat('@');
+  range.setValues([[key, String(value)]]);
 }
