@@ -55,6 +55,21 @@
     return Math.max(1, Math.round(n / 1024)) + ' KB';
   }
 
+  /**
+   * A stable hue per specialty so the date tile of every appointment can be
+   * read by kind before the title is. Seven muted hues, spread around the
+   * wheel; the same specialty string always lands on the same one.
+   */
+  var SPEC_HUES = [172, 212, 262, 20, 340, 96, 42];
+  function specHue(specialty) {
+    var s = String(specialty || '').trim();
+    if (!s) return 172;
+    var h = 0;
+    for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    return SPEC_HUES[h % SPEC_HUES.length];
+  }
+  function specStyle(specialty) { return ' style="--spec-h:' + specHue(specialty) + '"'; }
+
   // ------------------------------------------------------------------ state
 
   var state = {
@@ -200,10 +215,12 @@
       items.forEach(function (a) {
         var d = parseISO(a.date);
         var n = dayDiff(a.date);
-        var nd = docsFor(a.id).length;
+        var ds = docsFor(a.id);
+        var nd = ds.length;
+        var nMissing = ds.filter(function (x) { return x.status === 'missing'; }).length;
         var cls = ['card', n < 0 ? 'past' : '', n === 0 ? 'today' : ''].join(' ').trim();
         html += '<button type="button" class="' + cls + '" data-id="' + esc(a.id) +
-          '" aria-current="' + (state.selected === a.id) + '">' +
+          '" aria-current="' + (state.selected === a.id) + '"' + specStyle(a.specialty) + '>' +
           '<span class="date-block"><span class="day">' + d.getDate() +
           '</span><span class="wd">' + DAYS[d.getDay()] + '</span></span>' +
           '<span class="card-body">' +
@@ -212,8 +229,9 @@
           (a.specialty ? ' · ' + esc(a.specialty) : '') + '</span>' +
           '<span class="meta">' + I.pin +
           '<span style="overflow:hidden;text-overflow:ellipsis">' + esc(a.location || '—') + '</span></span>' +
-          '<span class="meta">' + I.doc + '<span class="count">' +
-          (nd ? nd + ' ' + (nd === 1 ? 'מסמך' : 'מסמכים') : 'אין מסמכים') + '</span>' +
+          '<span class="meta">' + I.doc + '<span class="count' + (nMissing ? ' has-missing' : '') + '">' +
+          (nMissing ? nMissing + ' ' + (nMissing === 1 ? 'מסמך חסר' : 'מסמכים חסרים')
+                    : nd ? nd + ' ' + (nd === 1 ? 'מסמך' : 'מסמכים') : 'אין מסמכים') + '</span>' +
           (a.companion ? '<span>·</span>' + I.person + '<span>' + esc(a.companion) + '</span>' : '') +
           '</span></span><span class="chev">' + I.chev + '</span></button>';
       });
@@ -230,7 +248,7 @@
         '<div class="doc-main"><div class="doc-name">' + esc(d.file_name) + '</div>' +
         (d.error
           ? '<div class="doc-sub error">' + esc(d.error) + '</div>'
-          : '<div class="progress"><i style="width:' + (d.progress || 10) + '%"></i></div>' +
+          : '<div class="progress"><i style="transform:scaleX(' + ((d.progress || 10) / 100) + ')"></i></div>' +
             '<div class="doc-sub uploading-hint">מעלה לדרייב…</div>') +
         '</div><div class="doc-actions">' +
         (d.error ? '<button type="button" class="btn small" data-act="dismiss-failed">הסר</button>' : '') +
@@ -289,7 +307,7 @@
       '</div>' +
       '<div class="detail-body">' +
         '<section class="panel">' +
-          '<div class="hero">' +
+          '<div class="hero"' + specStyle(a.specialty) + '>' +
             '<span class="date-block"><span class="day">' + d.getDate() +
             '</span><span class="mon">' + MONTHS[d.getMonth()] + '</span></span>' +
             '<div><h2>' + esc(a.doctor) + '</h2>' +
@@ -348,9 +366,54 @@
       : '<li class="empty"><strong>לא נמצאו מסמכים</strong></li>';
   }
 
+  /**
+   * Desktop-only: what fills the detail column when nothing is selected. A
+   * glance at the next appointment and the two numbers worth acting on,
+   * instead of an empty dashed box.
+   */
+  function renderSummary() {
+    if (!el.detailEmpty) return;
+    var upcoming = state.appointments
+      .filter(function (a) { return dayDiff(a.date) >= 0; })
+      .sort(function (a, b) { return (a.date + a.time).localeCompare(b.date + b.time); });
+    var next = upcoming[0];
+    var missing = state.documents.filter(function (x) { return x.status === 'missing'; }).length;
+    var stored = state.documents.length - missing;
+
+    if (!state.appointments.length) {
+      el.detailEmpty.innerHTML = '<div class="summary"><div class="empty"><strong>הקלסר ריק</strong>לחץ על "תור חדש" כדי להוסיף את התור הראשון</div></div>';
+      return;
+    }
+
+    var nextHtml = '';
+    if (next) {
+      var d = parseISO(next.date), n = dayDiff(next.date);
+      var when = n === 0 ? 'היום' : n === 1 ? 'מחר' : 'בעוד ' + n + ' ימים';
+      nextHtml = '<button type="button" class="summary-next" data-goto="' + esc(next.id) + '"' + specStyle(next.specialty) + '>' +
+        '<span class="date-block"><span class="day">' + d.getDate() + '</span><span class="wd">' + MONTHS[d.getMonth()] + '</span></span>' +
+        '<span><span class="summary-label">התור הבא · ' + when + '</span>' +
+        '<span class="summary-title" style="display:block">' + esc(next.doctor) + (next.specialty ? ' · ' + esc(next.specialty) : '') + '</span>' +
+        '<span class="summary-when" style="display:block">יום ' + DAYS[d.getDay()] + ', ' + fmtDate(next.date) + ' · ' + esc(next.time) +
+        (next.location ? ' · ' + esc(next.location) : '') + '</span></span></button>';
+    } else {
+      nextHtml = '<div class="summary-next" style="cursor:default"><span class="date-block"><span class="day">—</span></span>' +
+        '<span><span class="summary-label">אין תורים קרובים</span><span class="summary-title" style="display:block">כל התורים ברשימה עברו</span></span></div>';
+    }
+
+    el.detailEmpty.innerHTML = '<div class="summary">' + nextHtml +
+      '<div class="summary-facts">' +
+        '<button type="button" class="fact" data-filter-to="upcoming"><b>' + upcoming.length + '</b><span>' + (upcoming.length === 1 ? 'תור קרוב' : 'תורים קרובים') + '</span></button>' +
+        '<button type="button" class="fact' + (missing ? ' warn' : '') + '" data-goto-docs="1"><b>' + missing + '</b><span>' + (missing === 1 ? 'מסמך חסר להעלאה' : 'מסמכים חסרים להעלאה') + '</span></button>' +
+        '<button type="button" class="fact" data-goto-docs="1"><b>' + stored + '</b><span>' + (stored === 1 ? 'מסמך בדרייב' : 'מסמכים בדרייב') + '</span></button>' +
+      '</div>' +
+      '<div class="summary-hint">בחר תור מהרשימה כדי לראות פרטים, מסמכים והערות</div>' +
+    '</div>';
+  }
+
   function renderAll() {
     renderAgenda();
     renderDetail();
+    renderSummary();
     if (state.view === 'docs') renderGeneralDocs();
   }
 
@@ -731,6 +794,15 @@
 
     el.bannerRetry.addEventListener('click', function () { refresh().catch(function () {}); });
 
+    // --- summary panel (desktop empty state)
+    el.detailEmpty.addEventListener('click', function (e) {
+      var go = e.target.closest('[data-goto]');
+      if (go) { goto('#/appt/' + encodeURIComponent(go.dataset.goto)); return; }
+      var f = e.target.closest('[data-filter-to]');
+      if (f) { setFilter(f.dataset.filterTo); renderAgenda(); return; }
+      if (e.target.closest('[data-goto-docs]')) goto('#/docs');
+    });
+
     matchMedia('(min-width:900px)').addEventListener('change', renderAll);
   }
 
@@ -834,6 +906,7 @@
     el = {
       gate: $('#gate'), gateForm: $('#gateForm'), gatePin: $('#gatePin'), gateErr: $('#gateErr'),
       app: $('#app'), agenda: $('#agenda'), detail: $('#detail'), detailContent: $('#detailContent'),
+      detailEmpty: $('#detailEmpty'),
       viewAppts: $('#view-appts'), viewDocs: $('#view-docs'),
       generalDocs: $('#generalDocs'), q: $('#q'), qDocs: $('#qDocs'),
       dlgForm: $('#dlgForm'), dlgConfirm: $('#dlgConfirm'), form: $('#form'),
