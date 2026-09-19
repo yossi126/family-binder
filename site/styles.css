@@ -281,18 +281,43 @@ input,textarea{caret-color:var(--accent)}
 .gate .err{color:var(--danger);font-size:13px;min-height:18px}
 
 /* ---------- dialogs ---------- */
-dialog{border:0;padding:0;background:var(--sheet);color:var(--ink);border-radius:16px 16px 0 0;width:100%;max-width:none;margin:auto 0 0;box-shadow:var(--shadow-3)}
+/* The sheet is capped so the actions can never be pushed off-screen by a long
+   form or the on-screen keyboard; the body scrolls inside it instead. dvh, not
+   vh, so iOS Safari's collapsing toolbars do not hide the last field. */
+dialog{border:0;padding:0;background:var(--sheet);color:var(--ink);border-radius:16px 16px 0 0;width:100%;max-width:none;margin:auto 0 0;box-shadow:var(--shadow-3);
+  max-height:90dvh;display:flex;flex-direction:column;overflow:hidden}
 dialog::backdrop{background:rgba(0,0,0,.4)}
-.dlg-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 0}
+.dlg-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 0;flex:none}
 .dlg-head h3{font-size:18px;font-weight:700}
-.form{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 16px 16px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
-.field{display:flex;flex-direction:column;gap:5px}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 16px 16px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));
+  overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
 .field.full{grid-column:1/-1}
 .field label{font-size:12px;color:var(--ink-2);letter-spacing:.02em}
-.field input,.field select,.field textarea{border:0;border-radius:var(--r-sm);padding:11px 12px;background:var(--paper-2);width:100%;min-height:44px}
+.field input,.field select,.field textarea{border:0;border-radius:var(--r-sm);padding:11px 12px;background:var(--paper-2);width:100%;min-width:0;min-height:44px}
 .field input:focus,.field select:focus,.field textarea:focus{box-shadow:0 0 0 2px var(--accent);outline:none}
 .field textarea{min-height:72px;resize:vertical}
+/* Native date/time controls refuse to shrink below their intrinsic text width
+   and would otherwise push the grid wider than the phone. */
+.field input[type="date"],.field input[type="time"]{max-width:100%}
 .form-actions{grid-column:1/-1;display:flex;gap:8px;justify-content:flex-start;margin-top:4px}
+/* Fields that belong together stay together at every width. */
+.pair-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pair-row.full{grid-column:1/-1}
+
+/* Phone: one field per row, so nothing is squeezed to half a narrow screen.
+   Date and time stay paired — they are read together and both fit. */
+@media (max-width:560px){
+  .form{grid-template-columns:1fr;gap:14px;padding-bottom:12px}
+  .pair-row{gap:10px}
+
+  /* The actions leave the scroll area and sit on the sheet, so "שמור" is
+     reachable without scrolling past seven fields. */
+  .form-actions{position:sticky;bottom:0;margin:4px -16px 0;padding:12px 16px;
+    padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));
+    background:var(--sheet);border-top:1px solid var(--rule)}
+  .form-actions .btn{flex:1;justify-content:center;min-height:46px}
+}
 .confirm{padding:16px;display:flex;flex-direction:column;gap:14px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
 .confirm p{margin:0;color:var(--ink-2)}
 
