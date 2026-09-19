@@ -6,7 +6,8 @@
   --shadow:0 1px 2px rgba(23,38,43,.05),0 6px 20px rgba(23,38,43,.07);
   --r:14px; --r-sm:8px;
   --font-ui:"Heebo",system-ui,"Segoe UI",Arial,sans-serif;
-  --font-display:"Frank Ruhl Libre","Times New Roman",serif;
+  /* one family throughout; display headings differ by weight, not typeface */
+  --font-display:var(--font-ui);
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
@@ -74,7 +75,7 @@ svg{display:block}
 
 /* agenda */
 .agenda .month{position:sticky;top:calc(56px + env(safe-area-inset-top,0px));z-index:5;background:var(--bg);display:flex;align-items:baseline;gap:10px;
-  font-family:var(--font-display);font-size:18px;font-weight:700;padding:14px 4px 8px;color:var(--text)}
+  font-family:var(--font-display);font-size:18px;font-weight:600;letter-spacing:-.01em;padding:14px 4px 8px;color:var(--text)}
 .agenda .month small{font-family:var(--font-ui);font-weight:400;font-size:13px;color:var(--muted)}
 .cards{display:flex;flex-direction:column;gap:8px}
 .card{display:grid;grid-template-columns:56px 1fr auto;gap:12px;align-items:center;text-align:start;width:100%;
@@ -158,7 +159,7 @@ svg{display:block}
 /* ---------- docs view ---------- */
 .docs-wrap{max-width:900px;margin-inline:auto}
 .page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
-.page-head h2{font-family:var(--font-display);font-size:24px}
+.page-head h2{font-family:var(--font-display);font-size:24px;letter-spacing:-.015em}
 .page-head p{margin:2px 0 0;color:var(--muted);font-size:14px}
 .docs-list{padding:4px 16px}
 
@@ -226,7 +227,7 @@ dialog::backdrop{background:rgba(10,20,22,.45)}
 .gate[hidden]{display:none}
 .gate form{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
   box-shadow:var(--shadow);padding:24px;width:min(360px,100%);display:flex;flex-direction:column;gap:14px}
-.gate h2{font-family:var(--font-display);font-size:22px}
+.gate h2{font-family:var(--font-display);font-size:22px;letter-spacing:-.01em}
 .gate p{margin:0;color:var(--muted);font-size:14px}
 .gate input{border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;
   background:var(--surface);font-size:17px;letter-spacing:.08em;text-align:center}
