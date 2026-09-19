@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="הקלסר הרפואי">
+  <rect width="512" height="512" rx="112" fill="#0E6F6B"/>
+  <!-- binder spine -->
+  <rect x="104" y="96" width="40" height="320" rx="12" fill="#0A5552"/>
+  <!-- page -->
+  <rect x="152" y="96" width="256" height="320" rx="20" fill="#FFFFFF"/>
+  <!-- ring holes -->
+  <circle cx="124" cy="168" r="13" fill="#D6ECEA"/>
+  <circle cx="124" cy="256" r="13" fill="#D6ECEA"/>
+  <circle cx="124" cy="344" r="13" fill="#D6ECEA"/>
+  <!-- medical cross -->
+  <path d="M260 168h40v52h52v40h-52v52h-40v-52h-52v-40h52z" fill="#0E6F6B"/>
+  <!-- a written line, so it reads as a document not just a cross -->
+  <rect x="208" y="348" width="144" height="16" rx="8" fill="#D3DCE0"/>
+</svg>

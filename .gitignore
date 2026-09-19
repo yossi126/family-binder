@@ -11,3 +11,5 @@ node_modules/
 .playwright-mcp/
 .DS_Store
 Thumbs.db
+site/.pin-test.js
+.tmp-test/

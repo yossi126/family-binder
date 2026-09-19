@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>הקלסר הרפואי</title>
+<meta name="description" content="תורים ומסמכים רפואיים למשפחה">
+<meta name="theme-color" content="#F1F4F6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1618" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<!-- Safari still reads only the apple- form; both are needed for "add to home screen" -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="הקלסר">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700&family=Frank+Ruhl+Libre:wght@700&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ===== PIN gate: shown until a working PIN is stored ===== -->
+<div class="gate" id="gate" hidden>
+  <form id="gateForm">
+    <h2>הקלסר הרפואי</h2>
+    <p>הקלד את קוד הכניסה. הקוד נשמר במכשיר הזה ולא תצטרך להקליד אותו שוב.</p>
+    <input type="password" id="gatePin" inputmode="numeric" autocomplete="current-password"
+           placeholder="קוד כניסה" required aria-label="קוד כניסה">
+    <div class="err" id="gateErr" role="alert"></div>
+    <button type="submit" class="btn primary" id="gateBtn">כניסה</button>
+  </form>
+</div>
+
+<div class="app" id="app" hidden>
+  <header class="topbar">
+    <div class="brand">
+      <h1>הקלסר הרפואי</h1>
+    </div>
+    <nav class="nav-desktop" aria-label="ניווט">
+      <button type="button" data-nav="appts" aria-current="page">תורים</button>
+      <button type="button" data-nav="docs">מסמכים כלליים</button>
+    </nav>
+    <span class="spacer"></span>
+    <button type="button" class="btn primary btn-new-desktop" id="btnNewDesktop">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      תור חדש
+    </button>
+  </header>
+
+  <main class="main">
+    <!-- ===== appointments view ===== -->
+    <section class="view" id="view-appts">
+      <div class="layout">
+        <div class="list-col">
+          <div class="toolbar">
+            <div class="banner" id="banner" hidden>
+              <span id="bannerText"></span>
+              <button type="button" id="bannerRetry">נסה שוב</button>
+            </div>
+            <div class="chips" role="group" aria-label="סינון">
+              <button type="button" class="chip" data-filter="upcoming" aria-pressed="true">הקרובים</button>
+              <button type="button" class="chip" data-filter="month" aria-pressed="false">החודש</button>
+              <button type="button" class="chip" data-filter="nextmonth" aria-pressed="false">החודש הבא</button>
+              <button type="button" class="chip" data-filter="past" aria-pressed="false">עברו</button>
+              <button type="button" class="chip" data-filter="all" aria-pressed="false">הכול</button>
+            </div>
+            <label class="search">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+              <input type="search" id="q" placeholder="חיפוש רופא, תחום, מקום…" autocomplete="off">
+            </label>
+          </div>
+          <div class="list-scroll">
+            <div class="agenda" id="agenda"></div>
+          </div>
+        </div>
+
+        <aside class="detail-panel" id="detail" aria-live="polite">
+          <div class="detail-empty">
+            <div class="empty"><strong>בחר תור מהרשימה</strong>הפרטים, ההערות והמסמכים יופיעו כאן</div>
+          </div>
+          <div class="detail-content" id="detailContent"></div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ===== general documents view ===== -->
+    <section class="view" id="view-docs" hidden>
+      <div class="docs-wrap">
+        <div class="page-head">
+          <div>
+            <h2>מסמכים כלליים</h2>
+            <p>מסמכים שלא שייכים לתור מסוים — תעודות, סיכומים, רשימות</p>
+          </div>
+          <button type="button" class="btn primary" id="btnUploadGeneral">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0-4 4m4-4 4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+            העלאת מסמך
+          </button>
+        </div>
+        <div class="toolbar">
+          <label class="search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input type="search" id="qDocs" placeholder="חיפוש במסמכים…" autocomplete="off">
+          </label>
+        </div>
+        <div class="panel">
+          <ul class="docs-list" id="generalDocs"></ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottomnav" aria-label="ניווט">
+    <button type="button" data-nav="appts" aria-current="page">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+      תורים
+    </button>
+    <button type="button" data-nav="docs">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg>
+      מסמכים
+    </button>
+  </nav>
+  <button type="button" class="fab" id="fab" aria-label="תור חדש">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+
+  <input type="file" id="fileInput" accept="image/*,application/pdf" multiple hidden>
+
+  <dialog id="dlgForm">
+    <div class="dlg-head">
+      <h3 id="dlgTitle">תור חדש</h3>
+      <button type="button" class="iconbtn" data-close aria-label="סגור">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <form class="form" id="form">
+      <div class="field full"><label for="fDoctor">רופא/ה או מכון</label><input id="fDoctor" required placeholder="ד״ר לוי / מכון גסטרו"></div>
+      <div class="field"><label for="fSpec">תחום</label><input id="fSpec" list="specs" placeholder="קרדיולוגיה"></div>
+      <datalist id="specs"><option>קרדיולוגיה</option><option>עיניים</option><option>אורתופדיה</option><option>גסטרואנטרולוגיה</option><option>המטולוגיה</option><option>דימות</option><option>רפואת משפחה</option><option>אורולוגיה</option></datalist>
+      <div class="field"><label for="fCompanion">מלווה</label>
+        <select id="fCompanion"><option value="">—</option><option>אח</option><option>אחות</option><option>אחר</option></select></div>
+      <div class="field"><label for="fDate">תאריך</label><input id="fDate" type="date" required></div>
+      <div class="field"><label for="fTime">שעה</label><input id="fTime" type="time" required></div>
+      <div class="field full"><label for="fLocation">מקום</label><input id="fLocation" placeholder="בית חולים, בניין 3 קומה 2"></div>
+      <div class="field full" id="fNotesField"><label for="fNotes">הערה ראשונה (לא חובה)</label><textarea id="fNotes" placeholder="להביא הפניה וטופס 17…"></textarea></div>
+      <div class="form-actions">
+        <button type="submit" class="btn primary" id="btnSave">שמור</button>
+        <button type="button" class="btn ghost" data-close>ביטול</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlgConfirm">
+    <div class="confirm">
+      <h3 style="font-size:18px" id="confirmTitle">למחוק את התור?</h3>
+      <p id="confirmText">השורה תימחק והאירוע יוסר מהיומן. תיקיית המסמכים בדרייב נשארת בארכיון.</p>
+      <div class="form-actions">
+        <button type="button" class="btn danger" id="btnConfirmDelete">מחק</button>
+        <button type="button" class="btn ghost" data-close>ביטול</button>
+      </div>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status"><span></span></div>
+</div>
+
+<script src="config.js"></script>
+<script src="api.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
