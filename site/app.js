@@ -60,10 +60,10 @@
    * read by kind before the title is. Seven muted hues, spread around the
    * wheel; the same specialty string always lands on the same one.
    */
-  var SPEC_HUES = [172, 212, 262, 20, 340, 96, 42];
+  var SPEC_HUES = [210, 262, 340, 25, 145, 190, 300];
   function specHue(specialty) {
     var s = String(specialty || '').trim();
-    if (!s) return 172;
+    if (!s) return 210;
     var h = 0;
     for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
     return SPEC_HUES[h % SPEC_HUES.length];
