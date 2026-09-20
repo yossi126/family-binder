@@ -939,7 +939,7 @@
     fetchDoc(id).then(function (got) {
       if (!got) { setShareBtnState(btn, 'idle'); return shareLink(d); }
       setShareBtnState(btn, 'ready');
-      toast('הקובץ מוכן — לחץ שוב כדי לשתף');
+      toast('הקובץ מוכן — לחץ שוב לשיתוף');
     }).catch(function (err) {
       setShareBtnState(btn, 'idle');
       if (err && err.code === 'unauthorized') { lock(); return; }
@@ -972,7 +972,10 @@
   function setShareBtnState(btn, state) {
     if (!btn) return;
     btn.classList.toggle('is-ready', state === 'ready');
-    btn.disabled = state === 'loading';
+    // aria-busy drives the spinner and already blocks pointer events; `disabled`
+    // would additionally drop focus, which is worse for a keyboard user.
+    if (state === 'loading') btn.setAttribute('aria-busy', 'true');
+    else btn.removeAttribute('aria-busy');
     btn.setAttribute('aria-label',
       state === 'ready' ? 'שתף עכשיו' : state === 'loading' ? 'מכין את הקובץ…' : 'שתף את הקובץ');
     btn.setAttribute('title', btn.getAttribute('aria-label'));
