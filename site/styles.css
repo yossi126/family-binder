@@ -308,8 +308,21 @@ dialog::backdrop{background:rgba(0,0,0,.4)}
 .field input:focus,.field select:focus,.field textarea:focus{box-shadow:0 0 0 2px var(--accent);outline:none}
 .field textarea{min-height:72px;resize:vertical}
 /* Native date/time controls refuse to shrink below their intrinsic text width
-   and would otherwise push the grid wider than the phone. */
-.field input[type="date"],.field input[type="time"]{max-width:100%}
+   and would otherwise push the grid wider than the phone. They also carry their
+   own intrinsic height and inner padding on iOS, which made them render taller
+   than every neighbouring field and eat the gap between them — the pair read as
+   one grey slab with a seam. Normalising the box and the inner spinner brings
+   them back onto the same rhythm as a plain input. */
+.field input[type="date"],.field input[type="time"]{max-width:100%;
+  -webkit-appearance:none;appearance:none;height:44px;min-height:44px;
+  font-family:inherit;font-size:15px;line-height:1.2}
+.field input[type="date"]::-webkit-date-and-time-value,
+.field input[type="time"]::-webkit-date-and-time-value{text-align:start;margin:0;padding:0}
+.field input[type="date"]::-webkit-datetime-edit,
+.field input[type="time"]::-webkit-datetime-edit{padding:0}
+/* The picker glyph is a control, not body text: tertiary ink, never below it. */
+.field input[type="date"]::-webkit-calendar-picker-indicator,
+.field input[type="time"]::-webkit-calendar-picker-indicator{opacity:.5;margin-inline-start:0}
 .form-actions{grid-column:1/-1;display:flex;gap:8px;justify-content:flex-start;margin-top:4px}
 /* Fields that belong together stay together at every width. */
 .pair-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -334,9 +347,12 @@ dialog::backdrop{background:rgba(0,0,0,.4)}
   .head-cancel,.head-save{display:inline-flex;position:relative;z-index:1}
   .head-close{display:none}
 
-  .form{grid-template-columns:1fr;gap:14px;align-content:start;
+  .form{grid-template-columns:1fr;gap:18px;align-content:start;padding-top:16px;
     padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}
-  .pair-row{gap:10px}
+  /* A pair is one group: its two fields sit closer to each other than the row
+     does to its neighbours, so the grouping reads without a box around it. */
+  .pair-row{gap:12px}
+  .field label{font-size:13px}
   /* Save and cancel live in the header now; the footer pair would be a
      duplicate of the same two actions. */
   .form-actions{display:none}
