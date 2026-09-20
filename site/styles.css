@@ -65,7 +65,11 @@ input,textarea{caret-color:var(--accent)}
 /* ---------- top bar ---------- */
 .topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:rgba(242,242,247,.78);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border-bottom:1px solid var(--rule);
   display:flex;align-items:center;gap:16px;padding:10px 16px;min-height:56px}
-.brand{display:flex;align-items:center;gap:10px}
+/* The brand doubles as "home"; it is a real button so it is reachable by
+   keyboard and announced as a control, but it keeps the bar's own styling. */
+.brand{display:flex;align-items:center;gap:10px;background:none;border:0;padding:0;
+  color:inherit;font:inherit;cursor:pointer;border-radius:var(--r-sm)}
+.brand:active{transform:scale(.97);transition:transform .08s}
 .brand-mark{width:26px;height:26px;flex:0 0 auto}
 .brand h1{font-size:19px;font-weight:700;letter-spacing:-.01em}
 .nav-desktop{display:none;gap:2px;margin-inline-start:12px}
@@ -81,11 +85,23 @@ input,textarea{caret-color:var(--accent)}
 .btn:active{transform:scale(.97);transition-duration:.08s}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .btn.primary:hover{background:var(--accent-ink);border-color:var(--accent-ink)}
+/* Destructive confirmation keeps the filled red: by then the user has asked
+   for it and the button must read as the point of no return. */
 .btn.danger{background:var(--danger);color:#fff}
-.btn.danger:hover{background:var(--danger-soft)}
+.btn.danger:hover{background:var(--danger-soft);color:var(--danger)}
 .btn.ghost{background:transparent;color:var(--accent)}
 .btn.ghost:hover{background:var(--accent-soft)}
 .btn.small{padding:6px 10px;font-size:13px}
+/* A per-row action repeats down the list, so it carries no fill at all — it is
+   an option on that row, not the screen's action. It gains its tint on contact. */
+.doc-actions .btn.small{background:transparent;color:var(--accent)}
+/* A section header's action is secondary to the screen's own primary (the FAB
+   sits a thumb away); it reads as a link with a target, not a filled pill. */
+/* accent-ink, not accent: on the grouped grey background the lighter blue
+   falls under 4.5:1. */
+.section-head .btn:not(.primary),.page-head .btn:not(.primary){background:transparent;color:var(--accent-ink);padding-inline:6px}
+.section-head .btn:not(.primary):hover,.page-head .btn:not(.primary):hover{background:var(--accent-soft)}
+.doc-actions .btn.small:hover,.doc-actions .btn.small:focus-visible{background:var(--accent-soft)}
 .btn-new-desktop{display:none}
 .btn[aria-busy="true"],.iconbtn[aria-busy="true"]{opacity:.6;pointer-events:none}
 .btn[aria-busy="true"]::after{content:"";width:12px;height:12px;border-radius:50%;border:2px solid currentColor;border-top-color:transparent;animation:spin .7s linear infinite}
@@ -180,11 +196,17 @@ input,textarea{caret-color:var(--accent)}
 .iconbtn{border:0;background:none;border-radius:var(--r-sm);padding:9px;color:var(--ink);display:inline-flex;min-width:40px;min-height:40px;align-items:center;justify-content:center;
   transition:background .15s}
 .iconbtn:hover{background:var(--paper-2)}
-.iconbtn.danger{color:var(--danger)}
+/* A row's delete is not its most important element. It carries the neutral ink
+   until the user actually reaches for it, then declares itself red. Touch has
+   no hover, so :active and :focus-visible carry the same signal there. */
+.iconbtn.danger{color:var(--ink-2)}
+.iconbtn.danger:hover,.iconbtn.danger:focus-visible,.iconbtn.danger:active{color:var(--danger)}
 /* Share is a two-tap action on iOS: the first tap fetches the file, the second
    opens the share sheet. `is-ready` marks the armed state between the two. */
-.iconbtn.is-ready{background:var(--accent);color:var(--on-accent)}
-.iconbtn.is-ready:hover{background:var(--accent)}
+/* Armed, not primary: a transient state should not outrank the page's one
+   real action. Tint carries the change without shouting it. */
+.iconbtn.is-ready{background:var(--accent-soft);color:var(--accent-ink)}
+.iconbtn.is-ready:hover{background:#D7E7FB}
 .iconbtn:disabled{opacity:.45}
 .iconbtn.danger:hover{background:var(--danger-soft)}
 .detail-body{padding:16px;padding-bottom:calc(32px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px;max-width:760px;margin-inline:auto}
@@ -212,7 +234,11 @@ input,textarea{caret-color:var(--accent)}
 .doc-icon{width:40px;height:40px;border-radius:var(--r-sm);display:grid;place-items:center;font-size:11px;font-weight:700;letter-spacing:.04em;background:var(--paper-2);color:var(--ink-2)}
 .doc-icon.pdf{background:var(--danger-soft);color:var(--danger)}
 .doc-icon.img{background:var(--accent-soft);color:var(--accent-ink)}
-.doc-icon.missing{background:var(--warn-soft);color:var(--warn);font-size:16px}
+/* Eight identical alarm tiles stop reading as alarm. The missing tile keeps the
+   warn hue but drops to a quiet dot, so a single missing file still stands out
+   in a list of stored ones without the column turning into a row of sirens. */
+.doc-icon.missing{background:var(--paper-2);color:var(--warn);font-size:0}
+.doc-icon.missing::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
 .doc.failed .doc-icon{background:var(--danger-soft);color:var(--danger)}
 .doc-main{min-width:0}
 .doc-name{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

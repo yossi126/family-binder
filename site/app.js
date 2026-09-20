@@ -337,8 +337,11 @@
         '</section>' +
 
         '<section class="panel section">' +
+          // Filled only while the section is empty, where it is the one thing
+          // to do; once documents exist it steps back to a tinted option.
           '<div class="section-head"><h3>מסמכים<span>' + ds.length + '</span></h3>' +
-          '<button type="button" class="btn primary small" data-act="upload">' + I.upload + ' העלאת מסמך</button></div>' +
+          '<button type="button" class="btn' + (ds.length ? '' : ' primary') + ' small" data-act="upload">' +
+          I.upload + ' העלאת מסמך</button></div>' +
           (ds.length
             ? '<ul class="docs">' + ds.map(docRow).join('') + '</ul>'
             : '<div class="empty" style="padding:20px"><strong>אין מסמכים לתור הזה</strong>הפניה, טופס 17, סיכום ביקור — צלם או בחר קובץ</div>') +
@@ -356,7 +359,7 @@
             : '<div class="doc-sub">עוד אין הערות</div>') +
           '<form class="note-form" data-act="note-form">' +
             '<input id="noteInput" placeholder="הוסף הערה…" autocomplete="off" required>' +
-            '<button type="submit" class="btn primary">הוסף</button>' +
+            '<button type="submit" class="btn">הוסף</button>' +
           '</form>' +
         '</section>' +
       '</div>';
@@ -375,6 +378,9 @@
     el.generalDocs.innerHTML = list.length
       ? list.map(docRow).join('')
       : '<li class="empty"><strong>לא נמצאו מסמכים</strong></li>';
+
+    // Same rule as the per-appointment section: filled only on an empty page.
+    $('#btnUploadGeneral').classList.toggle('primary', !generalDocs().length);
   }
 
   /**
@@ -730,6 +736,10 @@
         renderAll();
       }
     });
+    $('#brandHome').addEventListener('click', function () {
+      goto('#/');
+    });
+
     $('#btnUploadGeneral').addEventListener('click', function () {
       state.uploadTarget = null;
       state.replaceDoc = null;
