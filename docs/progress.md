@@ -510,3 +510,40 @@ iOS מרשה `navigator.share` **רק בתוך הלחיצה עצמה** (transien
 לא רק את האחרון.**
 
 0 שגיאות בקונסול, דטקטור 0 ממצאים. נתונים: 14/20, 0 יתומים.
+
+## 2026-09-20 — Phase 5 + S6: הבוט כובה
+המשתמש ביקש ניתוק. המפתח נמצא ב-`~/.ssh/oci-family-agent.key` (לא בפרויקט — לכן
+לא עלה בחיפושים הקודמים; התיקייה `digweed-personal-agent/secrets` מכילה אישורי
+Google בלבד, לא SSH).
+
+### מה נמצא על ה-VM שלא היה בתוכנית
+מלבד `family-agent.service` היו גם **`family-agent-backup.timer` ו-
+`family-agent-backup.service`** — גיבוי SQLite לילי ב-03:30. כיבוי השירות לבדו
+היה משאיר את הטיימר פעיל. **שלושתם כובו.**
+
+### מה בוצע
+```
+sudo systemctl disable --now family-agent.service
+sudo systemctl disable --now family-agent-backup.timer
+sudo systemctl disable --now family-agent-backup.service
+```
+
+**אומת:** שירות `inactive`+`disabled`, טיימר `inactive`+`disabled`,
+`list-timers` ריק מ-family, `pgrep` ללא תהליכים. **לא יחזור אחרי reboot.**
+
+### גיבוי (Phase 5) — בוצע בכל זאת
+המשתמש העריך שאין הרבה לגבות, אבל כיוון שהחיבור כבר היה פתוח העלות הייתה אפסית.
+`/opt/family-agent/data/family_agent.db` → `migration/family_agent.db` (git-ignored,
+אומת עם `git check-ignore`). 73,728 בתים, חתימת `SQLite format 3` תקינה.
+
+**תוכן (ספירות בלבד):** appointments 13 · documents 11 · notes 1 · referrals 8 ·
+medications 19 · tasks 7 · conversation_history 20.
+13/11 תואמים למה שיובא ב-Phase 3 → **המיגרציה הייתה מלאה**.
+**תרופות והפניות לא נכנסו לאתר** (לא בסקופ) — כעת שמורות מקומית בלבד.
+
+### מצב ה-VM
+`instance-20260728-2301` (Israel Central, 82.70.218.161) **נשאר Running** לפי
+התוכנית — עד שהמשתמש מרוצה מהאתר. מחיקתו מקונסולת Oracle היא צעד ידני נפרד
+ולא בסקופ. להחזרת הבוט במידת הצורך: `sudo systemctl enable --now family-agent`.
+
+**Phase 5 ו-S6 הושלמו.**
