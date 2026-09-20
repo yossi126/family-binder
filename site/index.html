@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <title>הקלסר הרפואי</title>
 <meta name="description" content="תורים ומסמכים רפואיים למשפחה">
 <meta name="theme-color" content="#F2F2F7">
@@ -126,10 +126,12 @@
 
   <input type="file" id="fileInput" accept="image/*,application/pdf" multiple hidden>
 
-  <dialog id="dlgForm">
+  <dialog id="dlgForm" tabindex="-1">
     <div class="dlg-head">
+      <button type="button" class="btn ghost head-cancel" data-close>ביטול</button>
       <h3 id="dlgTitle">תור חדש</h3>
-      <button type="button" class="iconbtn" data-close aria-label="סגור">
+      <button type="submit" class="btn primary head-save" form="form">שמור</button>
+      <button type="button" class="iconbtn head-close" data-close aria-label="סגור">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
       </button>
     </div>
@@ -146,7 +148,6 @@
         <div class="field pair"><label for="fTime">שעה</label><input id="fTime" type="time" required></div>
       </div>
       <div class="field full"><label for="fLocation">מקום</label><input id="fLocation" placeholder="בית חולים, בניין 3 קומה 2"></div>
-      <div class="field full" id="fNotesField"><label for="fNotes">הערה ראשונה (לא חובה)</label><textarea id="fNotes" placeholder="להביא הפניה וטופס 17…"></textarea></div>
       <div class="form-actions">
         <button type="submit" class="btn primary" id="btnSave">שמור</button>
         <button type="button" class="btn ghost" data-close>ביטול</button>

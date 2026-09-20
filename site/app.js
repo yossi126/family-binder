@@ -576,10 +576,12 @@
     $('#fDate').value = a ? a.date : iso(addDays(7));
     $('#fTime').value = a ? a.time : '09:00';
     $('#fLocation').value = a ? a.location : '';
-    $('#fNotes').value = '';
-    $('#fNotesField').hidden = !!a;     // first note only makes sense on create
     el.dlgForm.showModal();
-    $('#fDoctor').focus();
+    // No autofocus: on a phone it threw up the keyboard before the form was
+    // even readable, covering half the fields. The user picks where to start.
+    // showModal() would otherwise focus the first control — now Cancel — and
+    // draw a focus ring on it, reading as "dismiss" being pre-selected.
+    el.dlgForm.focus();
   }
 
   var confirmAction = null;
@@ -769,8 +771,6 @@
           return editingId;
         });
       } else {
-        var firstNote = $('#fNotes').value.trim();
-        if (firstNote) fields.firstNote = firstNote;
         work = api.createAppointment(fields).then(function (res) {
           toast('התור נשמר: שורה, אירוע ביומן ותיקייה בדרייב');
           return res.appointment.id;

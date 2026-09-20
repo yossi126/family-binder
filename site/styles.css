@@ -297,6 +297,8 @@ dialog[open]{display:flex;flex-direction:column}
 dialog::backdrop{background:rgba(0,0,0,.4)}
 .dlg-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 0;flex:none}
 .dlg-head h3{font-size:18px;font-weight:700}
+/* The header actions belong to the phone's full-screen layout only. */
+.head-cancel,.head-save{display:none}
 .form{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 16px 16px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));
   overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .field{display:flex;flex-direction:column;gap:5px;min-width:0}
@@ -313,18 +315,31 @@ dialog::backdrop{background:rgba(0,0,0,.4)}
 .pair-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .pair-row.full{grid-column:1/-1}
 
-/* Phone: one field per row, so nothing is squeezed to half a narrow screen.
-   Date and time stay paired — they are read together and both fit. */
+/* Phone: the form is a screen, not a sheet.
+   A seven-field form inside a bottom sheet leaves ~500px once the iOS keyboard
+   takes its ~340px, so fields and the save button end up under the keyboard.
+   Apple's own create-forms are full screen on a phone for exactly this reason:
+   the actions live in a fixed header that the keyboard can never cover, and the
+   fields scroll between them. `interactive-widget=resizes-content` in the
+   viewport meta makes the keyboard shrink this box instead of pushing it off. */
 @media (max-width:560px){
-  .form{grid-template-columns:1fr;gap:14px;padding-bottom:12px}
-  .pair-row{gap:10px}
+  dialog[open]{max-height:none;height:100dvh;border-radius:0;margin:0}
 
-  /* The actions leave the scroll area and sit on the sheet, so "שמור" is
-     reachable without scrolling past seven fields. */
-  .form-actions{position:sticky;bottom:0;margin:4px -16px 0;padding:12px 16px;
-    padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));
-    background:var(--sheet);border-top:1px solid var(--rule)}
-  .form-actions .btn{flex:1;justify-content:center;min-height:46px}
+  .dlg-head{padding:0 8px;min-height:52px;gap:8px;
+    padding-top:env(safe-area-inset-top,0px);
+    background:var(--sheet);border-bottom:1px solid var(--rule);
+    position:sticky;top:0;z-index:2}
+  /* The title is centred between the two actions, iOS navigation-bar style. */
+  .dlg-head h3{position:absolute;inset-inline:0;text-align:center;pointer-events:none;font-size:17px}
+  .head-cancel,.head-save{display:inline-flex;position:relative;z-index:1}
+  .head-close{display:none}
+
+  .form{grid-template-columns:1fr;gap:14px;align-content:start;
+    padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}
+  .pair-row{gap:10px}
+  /* Save and cancel live in the header now; the footer pair would be a
+     duplicate of the same two actions. */
+  .form-actions{display:none}
 }
 .confirm{padding:16px;display:flex;flex-direction:column;gap:14px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
 .confirm p{margin:0;color:var(--ink-2)}
