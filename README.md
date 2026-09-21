@@ -2,13 +2,16 @@
 
 אתר משפחתי לניהול תורים רפואיים ומסמכים. ללא שרת, ללא עלות.
 
+**סטטוס:** חי ופעיל — https://yossi126.github.io/family-binder/
+הבוט הקודם בטלגרם (`digweed-personal-agent`) כובה ב-20/9/2026; הנתונים הועברו לכאן.
+
 - **אתר:** GitHub Pages (HTML + JS סטטי, עברית, RTL, mobile-first)
 - **Backend:** Google Apps Script (Web App)
 - **נתונים:** Google Sheets (master) · Google Drive (מסמכים) · Google Calendar (תזכורות)
 
 **למשתמש:** [`docs/user-guide.md`](docs/user-guide.md) — איך מוסיפים תור, מעלים מסמך, מחליפים קוד כניסה.
 
-למפתח: [`docs/plan.md`](docs/plan.md) · יומן העבודה: [`docs/progress.md`](docs/progress.md) · מצב נוכחי: [`docs/handoff.md`](docs/handoff.md)
+למפתח: **מצב נוכחי ומזהים** ב-[`docs/handoff.md`](docs/handoff.md) · יומן העבודה ב-[`docs/progress.md`](docs/progress.md) · [`docs/plan.md`](docs/plan.md) הוא התוכנית המקורית (היסטורי).
 
 ## פריסה
 

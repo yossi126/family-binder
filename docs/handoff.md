@@ -77,5 +77,8 @@ git push origin main       # .github/workflows/pages.yml מפרסם את site/
 - **SSH ל-VM:** `ssh -i ~/.ssh/oci-family-agent.key ubuntu@82.70.218.161`
   (המפתח לא בפרויקט). האפליקציה ב-`/opt/family-agent`, רצה כמשתמש `famagent`.
 - הבוט כבוי ומנוטרל. להחזרה: `sudo systemctl enable --now family-agent`.
+- **`migration/family_agent.db` הוא העותק היחיד** של 19 התרופות ו-8 ההפניות
+  מהבוט — הן מעולם לא היו בסקופ האתר. git-ignored, כלומר לא מגובה בשום מקום אחר.
+  אם הן חשובות, שווה עותק נוסף לפני מחיקת ה-VM.
 - **לפני אימות מקומי:** לסגור את *כל* מופעי `http.server` דרך PowerShell — מופעים
   יתומים מסשנים קודמים מגישים קבצים ישנים ונראים כמו "השינוי לא נתפס".
