@@ -139,13 +139,18 @@
     }
     return null;
   }
+  /**
+   * In-flight uploads render first. The saved list is newest-first, so
+   * appending them put a new file at the bottom only to have it jump to the
+   * top the moment it finished — the row moved under the user's eyes.
+   */
   function docsFor(apptId) {
     var out = state.documents.filter(function (d) { return d.appointment_id === apptId; });
-    return out.concat(state.pendingUploads.filter(function (p) { return p.appointment_id === apptId; }));
+    return state.pendingUploads.filter(function (p) { return p.appointment_id === apptId; }).concat(out);
   }
   function generalDocs() {
     var out = state.documents.filter(function (d) { return !d.appointment_id; });
-    return out.concat(state.pendingUploads.filter(function (p) { return !p.appointment_id; }));
+    return state.pendingUploads.filter(function (p) { return !p.appointment_id; }).concat(out);
   }
   function notesFor(apptId) {
     return state.notes.filter(function (n) { return n.appointment_id === apptId; });
@@ -261,7 +266,9 @@
         '<div class="doc-main"><div class="doc-name">' + esc(d.description || 'מסמך ללא תיאור') + '</div>' +
         '<div class="doc-sub">חסר קובץ — הועבר מהבוט, יש להעלות מחדש</div></div>' +
         '<div class="doc-actions"><button type="button" class="btn small" data-act="upload-missing">' +
-        I.upload + ' העלה</button></div></li>';
+        I.upload + ' העלה</button>' +
+        '<button type="button" class="iconbtn danger" data-act="delete-doc" title="הסר מהרשימה" aria-label="הסר מהרשימה">' +
+        I.trashSmall + '</button></div></li>';
     }
 
     var isPdf = String(d.mime).indexOf('pdf') >= 0;
@@ -373,6 +380,9 @@
       if (!q) return true;
       return ((d.file_name || '') + ' ' + (d.description || '')).indexOf(q) >= 0;
     }).sort(function (a, b) {
+      // An in-flight row has no uploaded_at and would sort to the bottom,
+      // then jump to the top on completion. It is the newest thing here.
+      if (a.pending !== b.pending) return a.pending ? -1 : 1;
       return String(b.uploaded_at || '').localeCompare(String(a.uploaded_at || ''));
     });
     el.generalDocs.innerHTML = list.length
@@ -1015,12 +1025,18 @@
   function confirmDeleteDoc(id) {
     var d = findDoc(id);
     if (!d) return;
-    askConfirm('למחוק את המסמך?',
-      'הקובץ יעבור לפח באשפה של דרייב. השתמש בזה רק לקובץ שהועלה בטעות.',
+    // A `missing` row has no file behind it, so promising to bin one would be
+    // a lie; it is a reminder being dismissed, not a document being deleted.
+    var missing = d.status === 'missing';
+    askConfirm(
+      missing ? 'להסיר מהרשימה?' : 'למחוק את המסמך?',
+      missing
+        ? 'זו תזכורת להעלות קובץ שהועבר מהבוט. אין קובץ בדרייב, ולכן שום דבר לא נמחק משם.'
+        : 'הקובץ יעבור לפח באשפה של דרייב. השתמש בזה רק לקובץ שהועלה בטעות.',
       function () {
         return api.deleteDocument(id).then(function () {
           state.documents = state.documents.filter(function (x) { return x.id !== id; });
-          toast('המסמך נמחק');
+          toast(missing ? 'הוסר מהרשימה' : 'המסמך נמחק');
           renderAll();
         });
       });
