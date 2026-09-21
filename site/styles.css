@@ -78,7 +78,10 @@ input,textarea{caret-color:var(--accent)}
 .nav-desktop button[aria-current="page"]{background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
 .topbar .spacer{flex:1}
 
-.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid transparent;background:var(--accent-soft);color:var(--accent-ink);border-radius:var(--r-sm);padding:9px 14px;font-weight:600;min-height:40px;
+/* Centred content: a button that is only as wide as its label looks the same
+   either way, but any button stretched by its container — the gate's column,
+   the confirm dialog's full-width pair — left its label hanging at the start. */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;background:var(--accent-soft);color:var(--accent-ink);border-radius:var(--r-sm);padding:9px 14px;font-weight:600;min-height:40px;
   transition:background .2s,color .2s,transform .35s var(--ease-out),opacity .2s}
 .btn:hover{background:#D7E7FB}
 /* feedback lives on the press: fast in, slow settle */
@@ -362,7 +365,10 @@ dialog::backdrop{background:rgba(0,0,0,.4)}
    fields scroll between them. `interactive-widget=resizes-content` in the
    viewport meta makes the keyboard shrink this box instead of pushing it off. */
 @media (max-width:560px){
-  dialog[open]{max-height:none;height:100dvh;border-radius:0;margin:0}
+  /* Only the appointment form becomes a screen. A confirmation is a short
+     question and stays a sheet at the bottom; stretching it to the full height
+     left a large empty area under two buttons. */
+  #dlgForm[open]{max-height:none;height:100dvh;border-radius:0;margin:0}
 
   .dlg-head{padding:0 8px;min-height:52px;gap:8px;
     padding-top:env(safe-area-inset-top,0px);
@@ -380,8 +386,12 @@ dialog::backdrop{background:rgba(0,0,0,.4)}
   .pair-row{gap:12px}
   .field label{font-size:13px}
   /* Save and cancel live in the header now; the footer pair would be a
-     duplicate of the same two actions. */
-  .form-actions{display:none}
+     duplicate of the same two actions. Scoped to #form — the confirm dialog
+     reuses .form-actions and has no header to fall back on, so hiding those
+     left it with no way to confirm or cancel. */
+  #form .form-actions{display:none}
+  /* A confirmation is a choice, so its two buttons share the width evenly. */
+  .confirm .form-actions .btn{flex:1;min-height:46px}
 }
 .confirm{padding:16px;display:flex;flex-direction:column;gap:14px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
 .confirm p{margin:0;color:var(--ink-2)}
